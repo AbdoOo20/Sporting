@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1043700753247",
+    "project_id": "ifmis-bae6a",
+    "storage_bucket": "ifmis-bae6a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1043700753247:android:e1b8eb44faf3c9ce7e8cea",
+        "android_client_info": {
+          "package_name": "dev.ifmis.news"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1043700753247-fa14e0athptlvais2t5mprgaqrr5kmb3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdVkWWQLTAV4jUL_HglT4aV-tMHfS0Efg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1043700753247-fa14e0athptlvais2t5mprgaqrr5kmb3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
