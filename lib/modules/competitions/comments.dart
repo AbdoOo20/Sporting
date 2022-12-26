@@ -1,22 +1,21 @@
 // ignore_for_file: must_be_immutable
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:news/modules/competitions/Fans_vote.dart';
 import 'package:news/providers/competition%20provider.dart';
 import 'package:provider/provider.dart';
-
+import '../../models/competition/competition model.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
 
 class Comments extends StatefulWidget {
-  String competitionId;
-  String userId;
-  String date;
-  int numberOfComments;
-  bool end;
+  CompetitionModel competitionModel;
+  String endDate;
+  int competitorId;
+  String numberOfComments;
+  bool isEnd;
 
-  Comments(this.competitionId, this.date, this.userId, this.numberOfComments, this.end, {Key? key})
+  Comments(this.competitionModel, this.endDate, this.competitorId, this.numberOfComments, this.isEnd,{Key? key})
       : super(key: key);
 
   @override
@@ -27,33 +26,11 @@ class _CommentsState extends State<Comments> {
   TextEditingController comment = TextEditingController();
   late CompetitionProvider competitionProvider;
 
-  String updateDate(String date) {
-    if (date.contains('Jan')) {
-      return date.replaceRange(date.indexOf('J'), date.indexOf('J') + 3, '1,');
-    } else if (date.contains('Feb')) {
-      return date.replaceRange(date.indexOf('F'), date.indexOf('F') + 3, '2,');
-    } else if (date.contains('Mar')) {
-      return date.replaceRange(date.indexOf('M'), date.indexOf('M') + 3, '3,');
-    } else if (date.contains('Apr')) {
-      return date.replaceRange(date.indexOf('A'), date.indexOf('A') + 3, '4,');
-    } else if (date.contains('May')) {
-      return date.replaceRange(date.indexOf('M'), date.indexOf('M') + 3, '5,');
-    } else if (date.contains('Jun')) {
-      return date.replaceRange(date.indexOf('J'), date.indexOf('J') + 3, '6,');
-    } else if (date.contains('Jul')) {
-      return date.replaceRange(date.indexOf('J'), date.indexOf('J') + 3, '7,');
-    } else if (date.contains('Aug')) {
-      return date.replaceRange(date.indexOf('A'), date.indexOf('A') + 3, '8,');
-    } else if (date.contains('Sep')) {
-      return date.replaceRange(date.indexOf('S'), date.indexOf('S') + 3, '9,');
-    } else if (date.contains('Oct')) {
-      return date.replaceRange(date.indexOf('O'), date.indexOf('O') + 3, '10,');
-    } else if (date.contains('Nov')) {
-      return date.replaceRange(date.indexOf('N'), date.indexOf('N') + 3, '11,');
-    } else if (date.contains('Dec')) {
-      return date.replaceRange(date.indexOf('D'), date.indexOf('D') + 3, '12,');
-    }
-    return '';
+  @override
+  void initState() {
+    Provider.of<CompetitionProvider>(context, listen: false)
+        .getComments(widget.competitorId);
+    super.initState();
   }
 
   @override
@@ -77,7 +54,7 @@ class _CommentsState extends State<Comments> {
         leading: IconButton(
           onPressed: () {
             navigateAndFinish(
-                context, FansVote(widget.competitionId, widget.date, widget.end));
+                context, FansVote(widget.competitionModel, widget.endDate, widget.isEnd));
           },
           icon: Icon(
             Icons.arrow_back,
@@ -87,7 +64,7 @@ class _CommentsState extends State<Comments> {
         actions: [
           Center(
             child: Text(
-              widget.numberOfComments.toString(),
+              widget.numberOfComments,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: sizeFromWidth(context, 20),
@@ -104,99 +81,63 @@ class _CommentsState extends State<Comments> {
         child: Column(
           children: [
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('competition')
-                    .doc(widget.competitionId)
-                    .collection('users')
-                    .doc(widget.userId)
-                    .collection('comments')
-                    .orderBy('time', descending: false)
-                    .snapshots(),
-                builder: (ctx, snapShot) {
-                  if (snapShot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                        child:
-                            circularProgressIndicator(lightGrey, primaryColor));
-                  }
-                  final doc = snapShot.data?.docs;
-                  if (doc == null || doc.isEmpty) {
-                    return const Center();
-                  } else {
-                    return ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: doc.length,
-                      itemBuilder: (ctx, index) {
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(left: 5, right: 5, top: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: materialWidget(
-                                    context,
-                                    null,
-                                    sizeFromWidth(context, 1),
-                                    15,
-                                    null,
-                                    BoxFit.fill,
-                                    [
-                                      textWidget(
-                                        doc[index]['name'],
-                                        TextDirection.rtl,
-                                        null,
-                                        black,
-                                        sizeFromWidth(context, 25),
-                                        FontWeight.bold,
-                                      ),
-                                      // textWidget(
-                                      //   updateDate(doc[index]['dateTimePerDay']),
-                                      //   TextDirection.rtl,
-                                      //   null,
-                                      //   black,
-                                      //   sizeFromWidth(context, 45),
-                                      //   FontWeight.bold,
-                                      // ),
-                                      // textWidget(
-                                      //   doc[index]['dateTimePerHour'],
-                                      //   TextDirection.ltr,
-                                      //   null,
-                                      //   black,
-                                      //   sizeFromWidth(context, 45),
-                                      //   FontWeight.bold,
-                                      // ),
-                                      textWidget(
-                                        doc[index]['text'],
-                                        TextDirection.rtl,
-                                        null,
-                                        black,
-                                        sizeFromWidth(context, 30),
-                                        FontWeight.bold,
-                                      ),
-                                    ],
-                                    MainAxisAlignment.start,
-                                    false,
-                                    10,
-                                    lightGrey,
-                                    () {},
-                                    CrossAxisAlignment.end),
-                              ),
-                              const SizedBox(width: 5),
-                              Column(
-                                children: [
-                                  const SizedBox(height: 10),
-                                  storyShape(context, lightGrey,
-                                      NetworkImage(doc[index]['image']), 30, 33),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  }
+              child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                itemCount: competitionProvider.comments.length,
+                itemBuilder: (ctx, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 5, right: 5, top: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: materialWidget(
+                              context,
+                              null,
+                              sizeFromWidth(context, 1),
+                              15,
+                              null,
+                              BoxFit.fill,
+                              [
+                                textWidget(
+                                  competitionProvider.comments[index].user.name,
+                                  TextDirection.rtl,
+                                  null,
+                                  black,
+                                  sizeFromWidth(context, 25),
+                                  FontWeight.bold,
+                                ),
+                                textWidget(
+                                  competitionProvider.comments[index].comment,
+                                  TextDirection.rtl,
+                                  null,
+                                  black,
+                                  sizeFromWidth(context, 30),
+                                  FontWeight.bold,
+                                ),
+                              ],
+                              MainAxisAlignment.start,
+                              false,
+                              10,
+                              lightGrey,
+                              () {},
+                              CrossAxisAlignment.end),
+                        ),
+                        const SizedBox(width: 5),
+                        storyShape(
+                          context,
+                          lightGrey,
+                          competitionProvider.comments[index].user.image != ''
+                              ? NetworkImage(competitionProvider
+                                  .comments[index].user.image)
+                              : null,
+                          30,
+                          33,
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ),
@@ -230,10 +171,11 @@ class _CommentsState extends State<Comments> {
                               state: ToastStates.ERROR);
                         } else {
                           competitionProvider
-                              .sendComment(widget.competitionId, widget.userId,
-                                  comment.text.trim())
+                              .addComment(widget.competitionModel.id,
+                                  widget.competitorId, comment.text.trim())
                               .then((value) {
                             comment.clear();
+                            competitionProvider.getComments(widget.competitorId);
                           });
                         }
                       },

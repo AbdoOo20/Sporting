@@ -1,90 +1,140 @@
-import 'dart:developer';
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:audioplayers/audioplayers.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_sound_lite/flutter_sound.dart';
-import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:news/models/chat/message%20model.dart';
 import 'package:news/shared/Components.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../models/chat/category chat model.dart';
+import '../models/chat/chat module.dart';
+import '../models/chat/user chat module.dart';
+import '../network/cash_helper.dart';
+
 class ChatProvider with ChangeNotifier {
   var picker = ImagePicker();
-  File? pickedImage;
   File? pickedVideo;
   bool isLoading = false;
   var messageControl = TextEditingController();
-  String enteredMessage = '';
-  String pathAudio = '';
-  FlutterSoundRecorder? audioRecorder;
-  FlutterSoundPlayer? audioPlay;
-  bool isPlay = false;
-  bool isRecord = false;
-  bool isRecorderInitialised = false;
-  String recordFilePath = '';
-  AudioPlayer audioPlayer = AudioPlayer();
-  Duration duration = const Duration();
   Duration position = Duration.zero;
-  int? index;
   VideoPlayerController videoPlayerController =
       VideoPlayerController.network('');
   bool isVideoPlay = true;
   bool isPortrait = true;
   bool showControl = true;
+  List<CategoryChatModel> categoryChat = [];
+  List<ChatModel> chats = [];
+  List<MessageModel> messages = [];
+  List<UserChatModule> userChat = [];
+  File? chatImage;
+  File? messageImage;
+  late Stream<void> stream;
+  TextEditingController search = TextEditingController();
+  bool userBlocked = false;
 
-  void pickImage(String receiver, String docId) async {
-    dynamic imageName = '';
-    dynamic url = '';
-    final pickedImageFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedImageFile != null) {
-      pickedImage = File(pickedImageFile.path);
+  Future<void> getCategoryChats() async {
+    categoryChat = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/categories');
+    var response = await http.get(
+      url,
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    List allCategoryChats = data['data'];
+    if (response.statusCode == 200) {
+      for (var element in allCategoryChats) {
+        categoryChat.add(CategoryChatModel.fromJSON(element));
+      }
       notifyListeners();
-    }
-    if (pickedImage != null) {
-      isLoading = true;
-      notifyListeners();
-      imageName = Uri.file(pickedImage!.path).pathSegments.last;
-      final ref =
-          FirebaseStorage.instance.ref().child('chat image').child(imageName);
-      await ref.putFile(pickedImage!);
-      url = await ref.getDownloadURL();
-      var user = FirebaseAuth.instance.currentUser?.uid.toString();
-      var currentUser =
-          await FirebaseFirestore.instance.collection('users').doc(user).get();
-      await FirebaseFirestore.instance
-          .collection('chatRoom')
-          .doc(docId)
-          .collection('chats')
-          .add({
-        'text': '',
-        'time': Timestamp.now(),
-        'sender': user,
-        'senderName': currentUser['userName'],
-        'senderImage': currentUser['image'],
-        'senderCountry': currentUser['country'],
-        'receiver': receiver,
-        'image': url,
-        'audio': '',
-        'video': '',
-        'timeOfDay':
-            '${DateTime.now().hour > 12 ? (DateTime.now().hour - 12) : DateTime.now().hour}:${DateTime.now().minute} ${periodTime()}',
-      });
-      pickedImage = null;
-      isLoading = false;
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
       notifyListeners();
     }
   }
 
-  void pickVideo(String receiver, String docId) async {
-    try {
+  Future<void> getChats(int chatID) async {
+    chats = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/chats?category_id=$chatID');
+    var response = await http.get(
+      url,
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    List allChats = data['data'];
+    if (response.statusCode == 200) {
+      for (var element in allChats) {
+        chats.add(ChatModel.fromJSON(element));
+      }
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  void searchAboutChat() {
+    List<ChatModel> searchChats = [];
+    searchChats = chats.where((element) {
+      var searchItem = element.name.toLowerCase();
+      return searchItem.contains(search.text.toLowerCase());
+    }).toList();
+    chats = [];
+    chats = searchChats;
+    notifyListeners();
+  }
+
+  Future<void> userEnterChat(int chatID) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var id = CacheHelper.getData(key: 'id') ?? '';
+    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/user/enter/chat');
+    Map<String, dynamic> data = {
+      'user_id': id.toString(),
+      'chat_id': chatID.toString(),
+    };
+    await http.post(
+      url,
+      body: data,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  Future<void> userLeaveChat(int chatID) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var id = CacheHelper.getData(key: 'id') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/user/leave/chat?user_id=$id&chat_id=$chatID');
+    Map<String, dynamic> data = {
+      'user_id': id.toString(),
+      'chat_id': chatID.toString(),
+    };
+    await http.delete(
+      url,
+      body: data,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  Future<void> sendMessage(String chatID, String message, String type) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var id = CacheHelper.getData(key: 'id') ?? '';
+    if (type == 'image') {
+      final pickedImageFile =
+          await picker.pickImage(source: ImageSource.gallery);
+      messageImage = File(pickedImageFile!.path);
+    }
+    if (type == 'video') {
       var pickedFile = await picker.pickVideo(
         source: ImageSource.gallery,
         maxDuration: const Duration(seconds: 30),
@@ -94,53 +144,274 @@ class ChatProvider with ChangeNotifier {
         VideoPlayerController videoPlayerController =
             VideoPlayerController.file(File(pickedFile.path));
         await videoPlayerController.initialize();
-        if (videoPlayerController.value.duration.inSeconds > 30) {
+        if (videoPlayerController.value.duration.inSeconds > 60) {
           pickedFile = null;
+          pickedVideo = null;
           showToast(
-              text: 'لا يتم ارسال فيديو يتخطى الثلاثون ثانيه',
+              text: 'لا يتم ارسال فيديو يتخطى الدقيقة',
               state: ToastStates.WARNING);
           notifyListeners();
         } else {
-          var user = FirebaseAuth.instance.currentUser?.uid.toString();
           showToast(
-              text: 'انتظر حتى يتم رفع الفيديو', state: ToastStates.WARNING);
-          FirebaseStorage.instance
-              .ref()
-              .child('chat videos')
-              .child(Uri.file(pickedVideo!.path).pathSegments.last)
-              .putFile(pickedVideo!)
-              .then((value) {
-            value.ref.getDownloadURL().then((videoUrl) async {
-              var currentUser = await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(user)
-                  .get();
-              await FirebaseFirestore.instance
-                  .collection('chatRoom')
-                  .doc(docId)
-                  .collection('chats')
-                  .add({
-                'text': '',
-                'time': Timestamp.now(),
-                'sender': user,
-                'senderName': currentUser['userName'],
-                'senderImage': currentUser['image'],
-                'senderCountry': currentUser['country'],
-                'receiver': receiver,
-                'image': '',
-                'audio': '',
-                'video': videoUrl,
-                'timeOfDay':
-                    '${DateTime.now().hour > 12 ? (DateTime.now().hour - 12) : DateTime.now().hour}:${DateTime.now().minute} ${periodTime()}',
-              });
-
-              pickedVideo = null;
-            });
-          });
+              text: 'انتظر يتم إرسال الفيديو', state: ToastStates.SUCCESS);
         }
       }
-    } catch (e) {
-      showToast(text: e.toString(), state: ToastStates.ERROR);
+    }
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    isLoading = true;
+    notifyListeners();
+    var request = http.MultipartRequest('POST',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/user/send/message'));
+    request.fields.addAll({
+      'user_id': id.toString(),
+      'chat_id': chatID,
+      'message': message,
+      'date': '${DateTime.now().hour}:${DateTime.now().minute} ${periodTime()}',
+    });
+    if (messageImage != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('image', messageImage!.path));
+    }
+    if (pickedVideo != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('video', pickedVideo!.path));
+    }
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      messageControl.clear();
+      messageImage = null;
+      pickedVideo = null;
+      messageImage = null;
+      getMessages(chatID);
+    }
+    isLoading = false;
+    notifyListeners();
+  }
+
+  void setStream(String chatID) {
+    stream = Stream.periodic(const Duration(seconds: 5))
+        .asyncMap((event) async => await getMessages(chatID));
+  }
+
+  Future<void> getMessages(String chatID) async {
+    messages = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/chat/messages?chat_id=$chatID');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    List allMessages = data['data'];
+    if (response.statusCode == 200) {
+      for (var element in allMessages) {
+        messages.add(MessageModel.fromJSON(element));
+      }
+      messages.sort((a, b) {
+        return b.messageID.compareTo(a.messageID);
+      });
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteMessage(String messageID, String chatID) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/delete/message?message_id=$messageID');
+    var response = await http.delete(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم الحذف', state: ToastStates.SUCCESS);
+      getMessages(chatID);
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> getUserChat(String chatID) async {
+    userChat = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/user/images/chat?chat_id=$chatID');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    List allImage = data['data'];
+    if (response.statusCode == 200) {
+      for (var element in allImage) {
+        userChat.add(UserChatModule.fromJSON(element['user']));
+      }
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  void selectChatImage() async {
+    final pickedImageFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedImageFile != null) {
+      chatImage = File(pickedImageFile.path);
+      showToast(text: 'تم اختيار الصورة', state: ToastStates.SUCCESS);
+      notifyListeners();
+    }
+  }
+
+  Future<void> createChat(String categoryID, String number, String name) async {
+    if (chatImage == null) {
+      showToast(text: 'يجب اختيار صورة المحادثة', state: ToastStates.ERROR);
+    } else {
+      isLoading = true;
+      notifyListeners();
+      String token = CacheHelper.getData(key: 'token') ?? '';
+      var id = CacheHelper.getData(key: 'id') ?? '';
+      var headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token'
+      };
+      var request = http.MultipartRequest(
+          'POST',
+          Uri.parse(
+              'http://iffsma-2030.com/public/api/v1/contestant/create/chat'));
+      request.fields.addAll({
+        'name': name,
+        'number_of_users': number,
+        'category_id': categoryID,
+        'user_id': id.toString(),
+      });
+      request.files
+          .add(await http.MultipartFile.fromPath('image', chatImage!.path));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      var data = await response.stream.bytesToString();
+      final decodedData = json.decode(data);
+      if (response.statusCode == 200) {
+        isLoading = false;
+        chatImage = null;
+        if (decodedData['message'] == "انت انشات شات من قبل") {
+          showToast(
+              text: 'أنت أنشات محادثة من قبل ولا يمكنك إنشاء أكثر من ذلك',
+              state: ToastStates.WARNING);
+        } else {
+          showToast(
+              text: 'انتظر حتى يتم قبول الدردشة الخاصة بك',
+              state: ToastStates.SUCCESS);
+        }
+        notifyListeners();
+      } else {
+        isLoading = false;
+        chatImage = null;
+        showToast(text: decodedData['message'], state: ToastStates.ERROR);
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> blockUser(String chatID, String id) async {
+    String token = CacheHelper.getData(key: 'token');
+    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/switch/bans');
+    Map<String, dynamic> body = {
+      "user_id": id,
+      "chat_id": chatID,
+    };
+    var response = await http.post(
+      url,
+      body: body,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      showToast(text: data['message'], state: ToastStates.SUCCESS);
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> checkIsUserBlocked(String chatID, String userID) async {
+    String token = CacheHelper.getData(key: 'token');
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/check/user/ban?user_id=$userID&chat_id=$chatID');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200 && data['message'] == 'yes') {
+      userBlocked = true;
+      notifyListeners();
+    } else {
+      userBlocked = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> userEditChat(String chatID, String chatName,
+      String numberOfUsers, String categoryID) async {
+    isLoading = true;
+    notifyListeners();
+    var id = CacheHelper.getData(key: 'id');
+    String token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest('POST',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/user/edit/chat'));
+    request.fields.addAll({
+      'chat_id': chatID,
+      'user_id': id.toString(),
+      'name': chatName,
+      'number_of_users': numberOfUsers,
+      'category_id': categoryID,
+    });
+    if (chatImage != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('image', chatImage!.path));
+    }
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم التعديل بنجاح', state: ToastStates.SUCCESS);
+      isLoading = false;
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+      isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -152,208 +423,6 @@ class ChatProvider with ChangeNotifier {
       return 'PM';
     }
     return null;
-  }
-
-  void setMessage(String message) {
-    enteredMessage = message;
-    notifyListeners();
-  }
-
-  void sendMessage(BuildContext context, String receiver, String docId,
-      [String? message]) async {
-    FocusScope.of(context).unfocus();
-    isLoading = true;
-    notifyListeners();
-    var user = FirebaseAuth.instance.currentUser?.uid.toString();
-    var currentUser =
-        await FirebaseFirestore.instance.collection('users').doc(user).get();
-    await FirebaseFirestore.instance
-        .collection('chatRoom')
-        .doc(docId)
-        .collection('chats')
-        .add({
-      'text': message ?? enteredMessage,
-      'time': Timestamp.now(),
-      'sender': user,
-      'senderName': currentUser['userName'],
-      'senderImage': currentUser['image'],
-      'senderCountry': currentUser['country'],
-      'receiver': receiver,
-      'image': '',
-      'audio': '',
-      'video': '',
-      'timeOfDay':
-          '${DateTime.now().hour}:${DateTime.now().minute} ${periodTime()}',
-    });
-    isLoading = false;
-    messageControl.clear();
-    enteredMessage = '';
-    notifyListeners();
-  }
-
-  Future initRecord() async {
-    audioRecorder = FlutterSoundRecorder();
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      throw RecordingPermissionException('Microphone Permission');
-    }
-    await audioRecorder!.openAudioSession();
-    isRecorderInitialised = true;
-    notifyListeners();
-  }
-
-  Future killRecord() async {
-    if (!isRecorderInitialised) return;
-    audioRecorder!.closeAudioSession();
-    audioRecorder = null;
-    isRecord = false;
-    isRecorderInitialised = false;
-    notifyListeners();
-  }
-
-  Future record() async {
-    if (!isRecorderInitialised) return;
-    Directory storageDirectory = await getApplicationDocumentsDirectory();
-    String filePath =
-        '${storageDirectory.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
-    await audioRecorder!.startRecorder(
-      toFile: filePath,
-    );
-    pathAudio = filePath;
-    notifyListeners();
-  }
-
-  Future stopRecord(String senderId, String receiverId, String docId) async {
-    if (!isRecorderInitialised) return;
-    await audioRecorder!.stopRecorder();
-    isRecord = false;
-    await uploadAudio(senderId, receiverId, docId);
-    notifyListeners();
-  }
-
-  Future toggleRecording(
-      String senderId, String receiverId, String docId) async {
-    if (isRecord) {
-      await record();
-      notifyListeners();
-    } else {
-      await stopRecord(senderId, receiverId, docId);
-      notifyListeners();
-    }
-  }
-
-  void sendAudio(
-      String url, String senderId, String receiverId, String docId) async {
-    var user = FirebaseAuth.instance.currentUser?.uid.toString();
-    var currentUser =
-        await FirebaseFirestore.instance.collection('users').doc(user).get();
-
-    FirebaseFirestore.instance
-        .collection('chatRoom')
-        .doc(docId)
-        .collection('chats')
-        .add({
-      'text': '',
-      'time': Timestamp.now(),
-      'sender': senderId,
-      'senderName': currentUser['userName'],
-      'senderImage': currentUser['image'],
-      'senderCountry': currentUser['country'],
-      'receiver': receiverId,
-      'image': '',
-      'audio': url,
-      'video': '',
-      'timeOfDay':
-          '${DateTime.now().hour > 12 ? (DateTime.now().hour - 12) : DateTime.now().hour}:${DateTime.now().minute} ${periodTime()}'
-    });
-  }
-
-  Future togglePlaying(url) async {
-    var link = Uri.parse('$url');
-    if (audioPlay!.isStopped) {
-      await play(link);
-      notifyListeners();
-    } else {
-      await stopPlay();
-      notifyListeners();
-    }
-  }
-
-  Future initPlayer() async {
-    audioPlay = FlutterSoundPlayer();
-    await audioPlay!.openAudioSession();
-    notifyListeners();
-  }
-
-  Future disposePlayer() async {
-    audioPlay!.closeAudioSession();
-    audioPlay = null;
-    isPlay = false;
-    notifyListeners();
-  }
-
-  Future play(url) async {
-    isPlay = true;
-    final bytes = await readBytes(url);
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/audio.mp3');
-    await file.writeAsBytes(bytes);
-    await audioPlay!.startPlayer(fromURI: file.path, codec: Codec.mp3);
-    if (recordFilePath != '' && File(recordFilePath).existsSync()) {
-      recordFilePath = file.path;
-      await audioPlay!.startPlayer(fromURI: recordFilePath, codec: Codec.mp3);
-    }
-    notifyListeners();
-  }
-
-  Future stopPlay() async {
-    isPlay = false;
-    await audioPlay!.stopPlayer();
-    notifyListeners();
-  }
-
-  uploadAudio(String senderId, String receiverId, String docId) async {
-    FirebaseStorage.instance
-        .ref()
-        .child('audio message')
-        .child('${DateTime.now().millisecondsSinceEpoch.toString()}.aac')
-        .putFile(File(pathAudio))
-        .then((value) {
-      value.ref.getDownloadURL().then((url) {
-        sendAudio(url, senderId, receiverId, docId);
-      });
-    });
-  }
-
-  Future<void> getAudio(url) async {
-    if (isPlay) {
-      await audioPlayer.pause();
-      isPlay = false;
-      notifyListeners();
-    } else {
-      audioPlayer.setUrl(url, isLocal: true);
-      await audioPlayer.play(url, isLocal: true);
-      isPlay = true;
-      notifyListeners();
-    }
-    audioPlayer.onDurationChanged.listen((Duration d) {
-      duration = d;
-      notifyListeners();
-    });
-    audioPlayer.onAudioPositionChanged.listen((Duration d) {
-      position = d;
-      notifyListeners();
-      if (position.inSeconds.toDouble() == duration.inSeconds.toDouble()) {
-        position = Duration.zero;
-        isPlay = false;
-        notifyListeners();
-      }
-    });
-  }
-
-  void getSeek(value) {
-    audioPlayer.seek(Duration(seconds: value.toInt()));
-    notifyListeners();
   }
 
   void initVideoPlayer(String videoLink) async {
@@ -422,26 +491,6 @@ class ChatProvider with ChangeNotifier {
     videoPlayerController.pause();
     videoPlayerController.dispose();
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
-    notifyListeners();
-  }
-
-  List usersImage = [];
-
-  void getRoomUsers(String docId) async {
-    usersImage = [];
-    var users = await FirebaseFirestore.instance
-        .collection('chatRoom')
-        .doc(docId)
-        .get();
-    List allUsers = users['users'];
-    for (int i = 0; i < allUsers.length; i++) {
-      var image = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(allUsers[i])
-          .get();
-      usersImage.add(image['image']);
-      notifyListeners();
-    }
     notifyListeners();
   }
 

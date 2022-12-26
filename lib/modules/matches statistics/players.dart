@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:news/modules/matches%20statistics/show%20player.dart';
 import 'package:news/modules/matches%20statistics/statistics.dart';
 import 'package:provider/provider.dart';
-
-import '../../models/player.dart';
+import '../../models/statistics/player.dart';
 import '../../providers/articles provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class PlayersTransaction extends StatefulWidget {
   const PlayersTransaction({Key? key}) : super(key: key);
@@ -18,13 +18,6 @@ class PlayersTransaction extends StatefulWidget {
 
 class _PlayersTransactionState extends State<PlayersTransaction> {
   late ArticlesProvider articlesProvider;
-
-  @override
-  void initState() {
-    Provider.of<ArticlesProvider>(context, listen: false).getPlayers();
-    Provider.of<ArticlesProvider>(context, listen: false).getOtherPlayers(true);
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +48,7 @@ class _PlayersTransactionState extends State<PlayersTransaction> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -129,24 +122,24 @@ class _PlayersTransactionState extends State<PlayersTransaction> {
             child: ListView(
               physics: const BouncingScrollPhysics(),
               children: [
-                if (articlesProvider.players.isEmpty)
+                if (players.isEmpty)
                   SizedBox(
                     height: sizeFromHeight(context, 2),
                     child: Center(
                         child:
                             circularProgressIndicator(lightGrey, primaryColor)),
                   ),
-                if (articlesProvider.players.isNotEmpty)
-                  for (int i = 0; i < articlesProvider.players.length; i++)
-                    itemPlayer(i, articlesProvider.players[i]),
-                if (articlesProvider.otherPlayers.isNotEmpty)
-                  for (int i = 0; i < articlesProvider.otherPlayers.length; i++)
-                    itemPlayer(i, articlesProvider.otherPlayers[i]),
+                if (players.isNotEmpty)
+                  for (int i = 0; i < players.length; i++)
+                    itemPlayer(i, players[i]),
+                if (otherPlayers.isNotEmpty)
+                  for (int i = 0; i < otherPlayers.length; i++)
+                    itemPlayer(i, otherPlayers[i]),
                 if (!articlesProvider.isLoading &&
-                    articlesProvider.otherPlayers.isNotEmpty)
-                  itemPlayer(articlesProvider.otherPlayers.length, articlesProvider.otherPlayers[0]),
+                    otherPlayers.isNotEmpty)
+                  itemPlayer(otherPlayers.length, otherPlayers[0]),
                 if (articlesProvider.isLoading &&
-                    articlesProvider.otherPlayers.isNotEmpty)
+                    otherPlayers.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(5),
                     child: Center(
@@ -157,50 +150,50 @@ class _PlayersTransactionState extends State<PlayersTransaction> {
             ),
           ),
           Container(
-            color: primaryColor,
-            height: sizeFromHeight(context, 10),
-            width: sizeFromWidth(context, 1),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: CarouselSlider(
-                items: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
-                              fit: BoxFit.fitWidth,
+                  color: primaryColor,
+                  height: sizeFromHeight(context, 10),
+                  width: sizeFromWidth(context, 1),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: CarouselSlider(
+                      items: downBanners.map((e) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(e.image),
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          ],
+                        );
+                      }).toList(),
+                      options: CarouselOptions(
+                        height: 250,
+                        initialPage: 0,
+                        enableInfiniteScroll: true,
+                        reverse: false,
+                        autoPlay: true,
+                        viewportFraction: 1,
+                        autoPlayInterval: const Duration(seconds: 3),
+                        autoPlayAnimationDuration: const Duration(seconds: 1),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        scrollDirection: Axis.horizontal,
                       ),
-                    ],
+                    ),
                   ),
-                ],
-                options: CarouselOptions(
-                  height: 250,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  reverse: false,
-                  autoPlay: true,
-                  viewportFraction: 1,
-                  autoPlayInterval: const Duration(seconds: 3),
-                  autoPlayAnimationDuration: const Duration(seconds: 1),
-                  autoPlayCurve: Curves.fastOutSlowIn,
-                  scrollDirection: Axis.horizontal,
                 ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
   Widget itemPlayer(index, PlayerModel playerModel) {
-    if (index < articlesProvider.otherPlayers.length) {
+    if (index < otherPlayers.length) {
       return InkWell(
         onTap: () {
           navigateTo(context, ShowPlayer(playerModel));
@@ -297,7 +290,7 @@ class _PlayersTransactionState extends State<PlayersTransaction> {
         ),
       );
     }
-    if (index == articlesProvider.otherPlayers.length) {
+    if (index == otherPlayers.length) {
       return InkWell(
         onTap: () {
           articlesProvider.getOtherPlayers(false);

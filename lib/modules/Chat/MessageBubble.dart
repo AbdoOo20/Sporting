@@ -1,17 +1,17 @@
 // ignore_for_file: use_build_context_synchronously, must_be_immutable
 
+import 'dart:developer';
 import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:news/modules/profile/profile.dart';
 import 'package:news/modules/show%20video/show%20video.dart';
+import 'package:news/network/cash_helper.dart';
 import 'package:news/providers/chat%20provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import '../../models/chat/message model.dart';
 import '../../providers/user provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
@@ -20,38 +20,10 @@ import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 
 class MessageBubble extends StatelessWidget {
-  final String message;
-  final String video;
   final bool isMe;
-  final String image;
-  final String userImage;
-  final String audio;
-  final int index;
-  final String date;
-  final String senderCountry;
-  final String senderName;
-  final String senderImage;
-  String senderId;
-  String chatId;
-  String messageId;
+  MessageModel messageModel;
 
-  MessageBubble(
-      this.message,
-      this.isMe,
-      this.image,
-      this.audio,
-      this.index,
-      this.date,
-      this.userImage,
-      this.video,
-      this.senderImage,
-      this.senderName,
-      this.senderCountry,
-      this.senderId,
-      this.chatId,
-      this.messageId,
-      {Key? key})
-      : super(key: key);
+  MessageBubble(this.messageModel, this.isMe, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +31,7 @@ class MessageBubble extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
       child: Column(
         children: [
-          if (image != '')
+          if (messageModel.image != '')
             Row(
               mainAxisAlignment:
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -68,13 +40,22 @@ class MessageBubble extends StatelessWidget {
                 if (!isMe)
                   InkWell(
                     onTap: () {
-                      showAlertDialog(context, senderName, senderImage,
-                          senderCountry, senderId);
+                      showAlertDialog(
+                        context,
+                        messageModel.user.name,
+                        messageModel.user.image,
+                        messageModel.user.country,
+                        messageModel.user.id.toString(),
+                        messageModel.chatID,
+                        messageModel.chatMessage.messageAdmin
+                      );
                     },
                     child: storyShape(
                       context,
                       white,
-                      userImage == '' ? null : NetworkImage(userImage),
+                      messageModel.user.image == ''
+                          ? null
+                          : NetworkImage(messageModel.user.image),
                       40,
                       35,
                     ),
@@ -84,35 +65,30 @@ class MessageBubble extends StatelessWidget {
                     children: [
                       InkWell(
                         onTap: () async {
-                          FirebaseFirestore.instance
-                              .collection('chatRoom')
-                              .doc(chatId)
-                              .collection('chats')
-                              .doc(messageId)
-                              .delete();
-                          showToast(
-                              text: 'تم حذف الصورة بنجاح',
-                              state: ToastStates.SUCCESS);
+                          Provider.of<ChatProvider>(context, listen: false)
+                              .deleteMessage(messageModel.messageID.toString(),
+                                  messageModel.chatID);
                         },
                         child: Icon(Icons.delete, color: primaryColor),
                       ),
                       SizedBox(height: sizeFromHeight(context, 30)),
                       InkWell(
                         onTap: () async {
-                          var url = Uri.parse(image);
+                          var url = Uri.parse(messageModel.image);
                           var response = await http.get(url);
                           var bytes = response.bodyBytes;
                           var temp = await getTemporaryDirectory();
                           var path = '${temp.path}/image.jpg';
                           File(path).writeAsBytesSync(bytes);
-                          await Share.shareFiles([path], text: image);
+                          await Share.shareFiles([path],
+                              text: messageModel.image);
                         },
                         child: Icon(Icons.share, color: primaryColor),
                       ),
                       SizedBox(height: sizeFromHeight(context, 30)),
                       InkWell(
                         onTap: () async {
-                          await GallerySaver.saveImage(image,
+                          await GallerySaver.saveImage(messageModel.image,
                                   albumName: 'صور الإتحاد الدولى')
                               .then((value) {
                             if (value!) {
@@ -128,7 +104,7 @@ class MessageBubble extends StatelessWidget {
                   ),
                 InkWell(
                   onTap: () {
-                    navigateTo(context, ShowImage(image));
+                    navigateTo(context, ShowImage(messageModel.image));
                   },
                   child: Container(
                     width: sizeFromWidth(context, 2.8),
@@ -146,7 +122,7 @@ class MessageBubble extends StatelessWidget {
                             : const Radius.circular(10),
                       ),
                       image: DecorationImage(
-                        image: NetworkImage(image),
+                        image: NetworkImage(messageModel.image),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -159,21 +135,31 @@ class MessageBubble extends StatelessWidget {
                     children: [
                       InkWell(
                         onTap: () async {
-                          var url = Uri.parse(image);
+                          Provider.of<ChatProvider>(context, listen: false)
+                              .deleteMessage(messageModel.messageID.toString(),
+                                  messageModel.chatID);
+                        },
+                        child: Icon(Icons.delete, color: primaryColor),
+                      ),
+                      SizedBox(height: sizeFromHeight(context, 30)),
+                      InkWell(
+                        onTap: () async {
+                          var url = Uri.parse(messageModel.image);
                           var response = await http.get(url);
                           var bytes = response.bodyBytes;
                           var temp = await getTemporaryDirectory();
                           var path = '${temp.path}/image.jpg';
                           File(path).writeAsBytesSync(bytes);
-                          await Share.shareFiles([path], text: image);
+                          await Share.shareFiles([path],
+                              text: messageModel.image);
                         },
                         child: Icon(Icons.share, color: primaryColor),
                       ),
-                      SizedBox(height: sizeFromHeight(context, 15)),
+                      SizedBox(height: sizeFromHeight(context, 30)),
                       InkWell(
                         onTap: () async {
-                          await GallerySaver.saveImage(image,
-                              albumName: 'صور الإتحاد الدولى')
+                          await GallerySaver.saveImage(messageModel.image,
+                                  albumName: 'صور الإتحاد الدولى')
                               .then((value) {
                             if (value!) {
                               showToast(
@@ -189,25 +175,34 @@ class MessageBubble extends StatelessWidget {
                 if (isMe)
                   InkWell(
                     onTap: () {
-                      showAlertDialog(context, senderName, senderImage,
-                          senderCountry, senderId);
+                      showAlertDialog(
+                          context,
+                          messageModel.user.name,
+                          messageModel.user.image,
+                          messageModel.user.country,
+                          messageModel.user.id.toString(),
+                          messageModel.chatID,
+                          messageModel.chatMessage.messageAdmin
+                      );
                     },
                     child: storyShape(
                       context,
                       white,
-                      userImage == '' ? null : NetworkImage(userImage),
+                      messageModel.user.image == ''
+                          ? null
+                          : NetworkImage(messageModel.user.image),
                       40,
                       35,
                     ),
                   ),
               ],
             ),
-          if (message != '' &&
-              !(message.contains('https') ||
-                  message.contains('www') ||
-                  message.contains('http')) &&
-              !(message.contains('بمغادرة غرفة الدردشة') ||
-                  message.contains('بالدخول للدردشة')))
+          if (messageModel.message != '' &&
+              !(messageModel.message.contains('https') ||
+                  messageModel.message.contains('www') ||
+                  messageModel.message.contains('http')) &&
+              !(messageModel.message.contains('غادر الدردشة') ||
+                  messageModel.message.contains('دخل الدردشة')))
             Align(
               alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
               child: Row(
@@ -217,13 +212,22 @@ class MessageBubble extends StatelessWidget {
                   if (!isMe)
                     InkWell(
                       onTap: () {
-                        showAlertDialog(context, senderName, senderImage,
-                            senderCountry, senderId);
+                        showAlertDialog(
+                            context,
+                            messageModel.user.name,
+                            messageModel.user.image,
+                            messageModel.user.country,
+                            messageModel.user.id.toString(),
+                            messageModel.chatID,
+                            messageModel.chatMessage.messageAdmin
+                        );
                       },
                       child: storyShape(
                         context,
                         white,
-                        userImage == '' ? null : NetworkImage(userImage),
+                        messageModel.user.image == ''
+                            ? null
+                            : NetworkImage(messageModel.user.image),
                         40,
                         35,
                       ),
@@ -231,15 +235,9 @@ class MessageBubble extends StatelessWidget {
                   if (isMe)
                     InkWell(
                       onTap: () async {
-                        FirebaseFirestore.instance
-                            .collection('chatRoom')
-                            .doc(chatId)
-                            .collection('chats')
-                            .doc(messageId)
-                            .delete();
-                        showToast(
-                            text: 'تم حذف الرسالة بنجاح',
-                            state: ToastStates.SUCCESS);
+                        Provider.of<ChatProvider>(context, listen: false)
+                            .deleteMessage(messageModel.messageID.toString(),
+                                messageModel.chatID);
                       },
                       child: Icon(Icons.delete, color: primaryColor),
                     ),
@@ -271,14 +269,14 @@ class MessageBubble extends StatelessWidget {
                             textAlign: TextAlign.end,
                             text: TextSpan(children: [
                               TextSpan(
-                                  text: '$message \n',
+                                  text: '${messageModel.message} \n',
                                   style: TextStyle(
                                     fontSize: sizeFromWidth(context, 30),
                                     fontWeight: FontWeight.normal,
                                     color: isMe ? white : petroleum,
                                   )),
                               TextSpan(
-                                text: date,
+                                text: messageModel.date,
                                 style: TextStyle(
                                   fontSize: sizeFromWidth(context, 45),
                                   fontWeight: FontWeight.normal,
@@ -294,13 +292,22 @@ class MessageBubble extends StatelessWidget {
                   if (isMe)
                     InkWell(
                       onTap: () {
-                        showAlertDialog(context, senderName, senderImage,
-                            senderCountry, senderId);
+                        showAlertDialog(
+                            context,
+                            messageModel.user.name,
+                            messageModel.user.image,
+                            messageModel.user.country,
+                            messageModel.user.id.toString(),
+                            messageModel.chatID,
+                            messageModel.chatMessage.messageAdmin
+                        );
                       },
                       child: storyShape(
                         context,
                         white,
-                        userImage == '' ? null : NetworkImage(userImage),
+                        messageModel.user.image == ''
+                            ? null
+                            : NetworkImage(messageModel.user.image),
                         40,
                         35,
                       ),
@@ -309,10 +316,10 @@ class MessageBubble extends StatelessWidget {
                 ],
               ),
             ),
-          if (message != '' &&
-              (message.contains('https') ||
-                  message.contains('www') ||
-                  message.contains('http')))
+          if (messageModel.message != '' &&
+              (messageModel.message.contains('https') ||
+                  messageModel.message.contains('www') ||
+                  messageModel.message.contains('http')))
             Align(
               alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
               child: Row(
@@ -322,13 +329,22 @@ class MessageBubble extends StatelessWidget {
                   if (!isMe)
                     InkWell(
                       onTap: () {
-                        showAlertDialog(context, senderName, senderImage,
-                            senderCountry, senderId);
+                        showAlertDialog(
+                            context,
+                            messageModel.user.name,
+                            messageModel.user.image,
+                            messageModel.user.country,
+                            messageModel.user.id.toString(),
+                            messageModel.chatID,
+                            messageModel.chatMessage.messageAdmin
+                        );
                       },
                       child: storyShape(
                         context,
                         white,
-                        userImage == '' ? null : NetworkImage(userImage),
+                        messageModel.user.image == ''
+                            ? null
+                            : NetworkImage(messageModel.user.image),
                         40,
                         35,
                       ),
@@ -336,15 +352,9 @@ class MessageBubble extends StatelessWidget {
                   if (isMe)
                     InkWell(
                       onTap: () async {
-                        FirebaseFirestore.instance
-                            .collection('chatRoom')
-                            .doc(chatId)
-                            .collection('chats')
-                            .doc(messageId)
-                            .delete();
-                        showToast(
-                            text: 'تم حذف الرسالة بنجاح',
-                            state: ToastStates.SUCCESS);
+                        Provider.of<ChatProvider>(context, listen: false)
+                            .deleteMessage(messageModel.messageID.toString(),
+                                messageModel.chatID);
                       },
                       child: Icon(Icons.delete, color: primaryColor),
                     ),
@@ -378,9 +388,11 @@ class MessageBubble extends StatelessWidget {
                             children: [
                               InkWell(
                                 onTap: () async {
-                                  dynamic link = Uri.parse(message);
+                                  dynamic link =
+                                      Uri.parse(messageModel.message);
                                   try {
-                                    await launchUrl(link);
+                                    await launchUrl(link,
+                                        mode: LaunchMode.inAppWebView);
                                   } catch (e) {
                                     showToast(
                                         text: 'there are error in link',
@@ -390,7 +402,7 @@ class MessageBubble extends StatelessWidget {
                                 child: Column(
                                   children: [
                                     Text(
-                                      '$message \n',
+                                      '${messageModel.message} \n',
                                       style: TextStyle(
                                         fontSize: sizeFromWidth(context, 30),
                                         fontWeight: FontWeight.w500,
@@ -402,7 +414,7 @@ class MessageBubble extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                date,
+                                messageModel.date,
                                 style: TextStyle(
                                   fontSize: sizeFromWidth(context, 45),
                                   fontWeight: FontWeight.normal,
@@ -418,13 +430,22 @@ class MessageBubble extends StatelessWidget {
                   if (isMe)
                     InkWell(
                       onTap: () {
-                        showAlertDialog(context, senderName, senderImage,
-                            senderCountry, senderId);
+                        showAlertDialog(
+                            context,
+                            messageModel.user.name,
+                            messageModel.user.image,
+                            messageModel.user.country,
+                            messageModel.user.id.toString(),
+                            messageModel.chatID,
+                            messageModel.chatMessage.messageAdmin
+                        );
                       },
                       child: storyShape(
                         context,
                         white,
-                        userImage == '' ? null : NetworkImage(userImage),
+                        messageModel.user.image == ''
+                            ? null
+                            : NetworkImage(messageModel.user.image),
                         40,
                         35,
                       ),
@@ -433,9 +454,9 @@ class MessageBubble extends StatelessWidget {
                 ],
               ),
             ),
-          if (message != '' &&
-              (message.contains('بمغادرة غرفة الدردشة') ||
-                  message.contains('بالدخول للدردشة')))
+          if (messageModel.message != '' &&
+              (messageModel.message.contains('غادر الدردشة') ||
+                  messageModel.message.contains('دخل الدردشة')))
             Align(
               alignment: Alignment.center,
               child: Row(
@@ -451,22 +472,22 @@ class MessageBubble extends StatelessWidget {
                         bottomRight: Radius.circular(10),
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 5, horizontal: 5),
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 2, horizontal: 8),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+                    margin:
+                        const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
                     child: RichText(
                       textAlign: TextAlign.end,
                       text: TextSpan(children: [
                         TextSpan(
-                            text: '$message \n',
+                            text: '${messageModel.message} \n',
                             style: TextStyle(
                               fontSize: sizeFromWidth(context, 30),
                               fontWeight: FontWeight.w500,
                               color: primaryColor,
                             )),
                         TextSpan(
-                          text: date,
+                          text: messageModel.date,
                           style: TextStyle(
                             fontSize: sizeFromWidth(context, 45),
                             fontWeight: FontWeight.w500,
@@ -478,13 +499,22 @@ class MessageBubble extends StatelessWidget {
                   ),
                   InkWell(
                     onTap: () {
-                      showAlertDialog(context, senderName, senderImage,
-                          senderCountry, senderId);
+                      showAlertDialog(
+                          context,
+                          messageModel.user.name,
+                          messageModel.user.image,
+                          messageModel.user.country,
+                          messageModel.user.id.toString(),
+                          messageModel.chatID,
+                          messageModel.chatMessage.messageAdmin
+                      );
                     },
                     child: storyShape(
                       context,
-                      pink,
-                      userImage == '' ? null : NetworkImage(userImage),
+                      white,
+                      messageModel.user.image == ''
+                          ? null
+                          : NetworkImage(messageModel.user.image),
                       40,
                       35,
                     ),
@@ -492,178 +522,7 @@ class MessageBubble extends StatelessWidget {
                 ],
               ),
             ),
-          if (audio != '')
-            Align(
-              alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-              child: Row(
-                mainAxisAlignment:
-                    isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                children: [
-                  if (!isMe)
-                    InkWell(
-                      onTap: () {
-                        showAlertDialog(context, senderName, senderImage,
-                            senderCountry, senderId);
-                      },
-                      child: storyShape(
-                        context,
-                        white,
-                        userImage == '' ? null : NetworkImage(userImage),
-                        40,
-                        35,
-                      ),
-                    ),
-                  if (isMe)
-                    InkWell(
-                      onTap: () async {
-                        FirebaseFirestore.instance
-                            .collection('chatRoom')
-                            .doc(chatId)
-                            .collection('chats')
-                            .doc(messageId)
-                            .delete();
-                        showToast(
-                            text: 'تم حذف الرسالة الصوتية بنجاح',
-                            state: ToastStates.SUCCESS);
-                      },
-                      child: Icon(Icons.delete, color: primaryColor),
-                    ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isMe ? darkGrey : lightGrey,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(10),
-                        topRight: const Radius.circular(10),
-                        bottomLeft: !isMe
-                            ? const Radius.circular(0)
-                            : const Radius.circular(10),
-                        bottomRight: isMe
-                            ? const Radius.circular(0)
-                            : const Radius.circular(10),
-                      ),
-                    ),
-                    padding:
-                        const EdgeInsets.only(right: 10, top: 5, bottom: 5),
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          width: sizeFromWidth(context, 1.5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              InkWell(
-                                onTap: () async {
-                                  await Provider.of<ChatProvider>(context,
-                                          listen: false)
-                                      .getAudio(audio);
-                                  Provider.of<ChatProvider>(context,
-                                          listen: false)
-                                      .index = index;
-                                },
-                                child: Icon(
-                                  Provider.of<ChatProvider>(context).index ==
-                                          index
-                                      ? Provider.of<ChatProvider>(context)
-                                                  .isPlay ==
-                                              false
-                                          ? Icons.play_arrow_sharp
-                                          : Icons.pause_circle_filled
-                                      : Icons.play_arrow_sharp,
-                                  color: primaryColor,
-                                  size: sizeFromWidth(context, 10),
-                                ),
-                              ),
-                              Slider.adaptive(
-                                inactiveColor: isMe ? lightGrey : petroleum,
-                                activeColor: primaryColor,
-                                min: 0.0,
-                                max: Provider.of<ChatProvider>(context,
-                                        listen: false)
-                                    .duration
-                                    .inSeconds
-                                    .toDouble(),
-                                value: Provider.of<ChatProvider>(context,
-                                                listen: false)
-                                            .index ==
-                                        index
-                                    ? Provider.of<ChatProvider>(context,
-                                            listen: false)
-                                        .position
-                                        .inSeconds
-                                        .toDouble()
-                                    : 0.0,
-                                onChanged: (value) {
-                                  Provider.of<ChatProvider>(context,
-                                          listen: false)
-                                      .getSeek(value);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(
-                            left: sizeFromWidth(context, 4.3),
-                            right: sizeFromWidth(context, 17),
-                          ),
-                          width: sizeFromWidth(context, 1.5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              if (Provider.of<ChatProvider>(context,
-                                          listen: false)
-                                      .isPlay &&
-                                  Provider.of<ChatProvider>(context,
-                                              listen: false)
-                                          .index ==
-                                      index)
-                                Text(
-                                    Provider.of<ChatProvider>(context,
-                                                    listen: false)
-                                                .index ==
-                                            index
-                                        ? '${Provider.of<ChatProvider>(context, listen: false).position.inMinutes.remainder(60)}:${(Provider.of<ChatProvider>(context, listen: false).position.inSeconds.remainder(60))}'
-                                        : '${Provider.of<ChatProvider>(context, listen: false).duration.inMinutes.remainder(60)}:${(Provider.of<ChatProvider>(context, listen: false).duration.inSeconds.remainder(60))}',
-                                    style: TextStyle(
-                                        color: isMe ? lightGrey : petroleum)),
-                              if (!Provider.of<ChatProvider>(context,
-                                          listen: false)
-                                      .isPlay ||
-                                  Provider.of<ChatProvider>(context,
-                                              listen: false)
-                                          .index !=
-                                      index)
-                                const Text(''),
-                              Text(date,
-                                  style: TextStyle(
-                                      color: isMe ? lightGrey : petroleum)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isMe)
-                    InkWell(
-                      onTap: () {
-                        showAlertDialog(context, senderName, senderImage,
-                            senderCountry, senderId);
-                      },
-                      child: storyShape(
-                        context,
-                        white,
-                        userImage == '' ? null : NetworkImage(userImage),
-                        40,
-                        35,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          if (video != '')
+          if (messageModel.video != '')
             Row(
               mainAxisAlignment:
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -672,13 +531,22 @@ class MessageBubble extends StatelessWidget {
                 if (!isMe)
                   InkWell(
                     onTap: () {
-                      showAlertDialog(context, senderName, senderImage,
-                          senderCountry, senderId);
+                      showAlertDialog(
+                          context,
+                          messageModel.user.name,
+                          messageModel.user.image,
+                          messageModel.user.country,
+                          messageModel.user.id.toString(),
+                          messageModel.chatID,
+                          messageModel.chatMessage.messageAdmin
+                      );
                     },
                     child: storyShape(
                       context,
                       white,
-                      userImage == '' ? null : NetworkImage(userImage),
+                      messageModel.user.image == ''
+                          ? null
+                          : NetworkImage(messageModel.user.image),
                       40,
                       35,
                     ),
@@ -688,35 +556,23 @@ class MessageBubble extends StatelessWidget {
                     children: [
                       InkWell(
                         onTap: () async {
-                          FirebaseFirestore.instance
-                              .collection('chatRoom')
-                              .doc(chatId)
-                              .collection('chats')
-                              .doc(messageId)
-                              .delete();
-                          showToast(
-                              text: 'تم حذف الفيديو بنجاح',
-                              state: ToastStates.SUCCESS);
+                          Provider.of<ChatProvider>(context, listen: false)
+                              .deleteMessage(messageModel.messageID.toString(),
+                                  messageModel.chatID);
                         },
                         child: Icon(Icons.delete, color: primaryColor),
                       ),
                       SizedBox(height: sizeFromHeight(context, 30)),
                       InkWell(
                         onTap: () async {
-                          var url = Uri.parse(video);
-                          var response = await http.get(url);
-                          var bytes = response.bodyBytes;
-                          var temp = await getTemporaryDirectory();
-                          var path = '${temp.path}/video.mp4';
-                          File(path).writeAsBytesSync(bytes);
-                          await Share.shareFiles([path], text: video);
+                          await Share.share(messageModel.video);
                         },
                         child: Icon(Icons.share, color: primaryColor),
                       ),
                       SizedBox(height: sizeFromHeight(context, 30)),
                       InkWell(
                         onTap: () async {
-                          await GallerySaver.saveVideo(video,
+                          await GallerySaver.saveVideo(messageModel.video,
                                   albumName: 'فيديوهات الإتحاد الدولى')
                               .then((value) {
                             if (value!) {
@@ -732,7 +588,7 @@ class MessageBubble extends StatelessWidget {
                   ),
                 InkWell(
                   onTap: () {
-                    navigateTo(context, ShowVideo(video));
+                    navigateTo(context, ShowVideo(messageModel.video));
                   },
                   child: Container(
                     width: sizeFromWidth(context, 2.8),
@@ -752,11 +608,7 @@ class MessageBubble extends StatelessWidget {
                     ),
                     margin:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    child: Icon(
-                      Icons.play_circle_fill_rounded,
-                      color: white,
-                      size: sizeFromWidth(context, 8),
-                    ),
+                    child: Icon(Icons.play_circle, color: white),
                   ),
                 ),
                 if (!isMe)
@@ -764,21 +616,24 @@ class MessageBubble extends StatelessWidget {
                     children: [
                       InkWell(
                         onTap: () async {
-                          var url = Uri.parse(video);
-                          var response = await http.get(url);
-                          var bytes = response.bodyBytes;
-                          var temp = await getTemporaryDirectory();
-                          var path = '${temp.path}/video.mp4';
-                          File(path).writeAsBytesSync(bytes);
-                          await Share.shareFiles([path], text: video);
+                          Provider.of<ChatProvider>(context, listen: false)
+                              .deleteMessage(messageModel.messageID.toString(),
+                                  messageModel.chatID);
+                        },
+                        child: Icon(Icons.delete, color: primaryColor),
+                      ),
+                      SizedBox(height: sizeFromHeight(context, 30)),
+                      InkWell(
+                        onTap: () async {
+                          await Share.share(messageModel.video);
                         },
                         child: Icon(Icons.share, color: primaryColor),
                       ),
-                      SizedBox(height: sizeFromHeight(context, 15)),
+                      SizedBox(height: sizeFromHeight(context, 30)),
                       InkWell(
                         onTap: () async {
-                          await GallerySaver.saveVideo(video,
-                              albumName: 'فيديوهات الإتحاد الدولى')
+                          await GallerySaver.saveVideo(messageModel.video,
+                                  albumName: 'فيديوهات الإتحاد الدولى')
                               .then((value) {
                             if (value!) {
                               showToast(
@@ -794,13 +649,22 @@ class MessageBubble extends StatelessWidget {
                 if (isMe)
                   InkWell(
                     onTap: () {
-                      showAlertDialog(context, senderName, senderImage,
-                          senderCountry, senderId);
+                      showAlertDialog(
+                          context,
+                          messageModel.user.name,
+                          messageModel.user.image,
+                          messageModel.user.country,
+                          messageModel.user.id.toString(),
+                          messageModel.chatID,
+                          messageModel.chatMessage.messageAdmin
+                      );
                     },
                     child: storyShape(
                       context,
                       white,
-                      userImage == '' ? null : NetworkImage(userImage),
+                      messageModel.user.image == ''
+                          ? null
+                          : NetworkImage(messageModel.user.image),
                       40,
                       35,
                     ),
@@ -819,7 +683,12 @@ showAlertDialog(
   String image,
   String country,
   String id,
+  String chatID,
+  var chatAdmin,
 ) {
+  var chatProvider = Provider.of<ChatProvider>(context, listen: false);
+  var userID = CacheHelper.getData(key: 'id');
+  bool isChatAdmin = userID == chatAdmin;
   AlertDialog alert = AlertDialog(
     backgroundColor: primaryColor,
     content: Column(
@@ -854,8 +723,12 @@ showAlertDialog(
           sizeFromWidth(context, 30),
           FontWeight.bold,
           () {
-            Provider.of<UserProvider>(context, listen: false).getUserData(id);
-            navigateTo(context, Profile(id, 'chat'));
+            Provider.of<UserProvider>(context, listen: false)
+                .getDataOtherUser(context, id)
+                .then((value) {
+              chatProvider.checkIsUserBlocked(chatID, id);
+              navigateTo(context, Profile(id, 'chat', isChatAdmin, chatProvider.userBlocked, chatID));
+            });
           },
         ),
       ],

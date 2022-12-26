@@ -1,25 +1,23 @@
 // ignore_for_file: must_be_immutable, use_build_context_synchronously
 
-import 'dart:developer';
-
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:news/network/cash_helper.dart';
 import 'package:news/providers/chat%20provider.dart';
 import 'package:provider/provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import 'Messages.dart';
 import 'chats room.dart';
 import 'newMessage.dart';
 
 class Chat extends StatefulWidget {
-  String id;
-  String chatId;
-  String categoryChatNumber;
+  String chatName;
+  int chatId;
+  int categoryChatNumber;
 
-  Chat(this.id, this.chatId, this.categoryChatNumber, {Key? key})
+  Chat(this.chatName, this.chatId, this.categoryChatNumber, {Key? key})
       : super(key: key);
 
   @override
@@ -30,52 +28,27 @@ class _ChatState extends State<Chat> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
   late ChatProvider chatProvider;
 
-  @override
-  void initState() {
-    Provider.of<ChatProvider>(context, listen: false).initPlayer();
-    Provider.of<ChatProvider>(context, listen: false).initRecord();
-    Provider.of<ChatProvider>(context, listen: false).isRecorderInitialised =
-        true;
-    super.initState();
-  }
-
   void endChat(String endFrom) async {
-    var user = FirebaseAuth.instance.currentUser!.uid;
-    Provider.of<ChatProvider>(context, listen: false).audioPlayer.stop();
-    Provider.of<ChatProvider>(context, listen: false).stopPlay();
-    Provider.of<ChatProvider>(context, listen: false).killRecord();
-    Provider.of<ChatProvider>(context, listen: false).disposePlayer();
-    var usersInChat = await FirebaseFirestore.instance
-        .collection('chatRoom')
-        .doc(widget.chatId)
-        .get();
-    List allUsers = usersInChat['users'];
-    if (allUsers.contains(user)) {
-      allUsers.remove(user);
-    }
-    FirebaseFirestore.instance
-        .collection('chatRoom')
-        .doc(widget.chatId)
-        .update({
-      'users': allUsers,
-    });
-    var currentUser =
-        await FirebaseFirestore.instance.collection('users').doc(user).get();
-    chatProvider.sendMessage(
-      context,
-      widget.id,
-      widget.chatId,
-      '${currentUser['userName']}\n قام بمغادرة غرفة الدردشة',
-    );
+    String name = CacheHelper.getData(key: 'name');
+    Provider.of<ChatProvider>(context, listen: false)
+        .userLeaveChat(widget.chatId);
+    Provider.of<ChatProvider>(context, listen: false)
+        .sendMessage(widget.chatId.toString(), '$name\nغادر الدردشة', 'message');
     if (endFrom == 'inApp') {
       navigateAndFinish(context, ChatsRoom(widget.categoryChatNumber));
     }
   }
 
   @override
+  void initState() {
+    Provider.of<ChatProvider>(context, listen: false).getMessages(widget.chatId.toString());
+    Provider.of<ChatProvider>(context, listen: false).setStream(widget.chatId.toString());
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     chatProvider = Provider.of(context);
-
     return WillPopScope(
       onWillPop: () async {
         endChat('outApp');
@@ -87,7 +60,7 @@ class _ChatState extends State<Chat> {
           elevation: 0,
           backgroundColor: primaryColor,
           title: textWidget(
-            widget.id,
+            widget.chatName,
             null,
             null,
             white,
@@ -97,8 +70,7 @@ class _ChatState extends State<Chat> {
           centerTitle: true,
           leading: IconButton(
             onPressed: () {
-              Provider.of<ChatProvider>(context, listen: false)
-                  .getRoomUsers(widget.chatId);
+              chatProvider.getUserChat(widget.chatId.toString());
               scaffoldKey.currentState!.openDrawer();
             },
             icon: Icon(Icons.people_alt, color: white),
@@ -120,7 +92,7 @@ class _ChatState extends State<Chat> {
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
                 if (Provider.of<ChatProvider>(context, listen: false)
-                    .usersImage
+                    .userChat
                     .isEmpty) {
                   return const Center();
                 }
@@ -129,18 +101,13 @@ class _ChatState extends State<Chat> {
                   child: CircleAvatar(
                     backgroundColor: scaffoldColor,
                     radius: sizeFromWidth(context, 13),
-                    backgroundImage: Provider.of<ChatProvider>(context,
-                                    listen: false)
-                                .usersImage[index] !=
-                            ''
-                        ? NetworkImage(
-                            Provider.of<ChatProvider>(context, listen: false)
-                                .usersImage[index])
+                    backgroundImage: chatProvider.userChat[index].image != ''
+                        ? NetworkImage(chatProvider.userChat[index].image)
                         : null,
                   ),
                 );
               },
-              itemCount: Provider.of<ChatProvider>(context).usersImage.length,
+              itemCount: Provider.of<ChatProvider>(context).userChat.length,
             ),
           ),
         ),
@@ -150,8 +117,8 @@ class _ChatState extends State<Chat> {
           color: white,
           child: Column(
             children: [
-              Expanded(child: Messages(widget.id, widget.chatId)),
-              NewMessages(widget.id, widget.chatId),
+              Expanded(child: Messages(widget.chatId.toString())),
+              NewMessages(widget.chatId.toString()),
               Container(
                 color: primaryColor,
                 height: sizeFromHeight(context, 10),
@@ -159,23 +126,22 @@ class _ChatState extends State<Chat> {
                 child: Directionality(
                   textDirection: TextDirection.rtl,
                   child: CarouselSlider(
-                    items: [
-                      Row(
+                    items: downBanners.map((e) {
+                      return Row(
                         children: [
                           Expanded(
                             child: Container(
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 image: DecorationImage(
-                                  image:
-                                      AssetImage('assets/images/banner2.png'),
+                                  image: NetworkImage(e.image),
                                   fit: BoxFit.fitWidth,
                                 ),
                               ),
                             ),
                           ),
                         ],
-                      ),
-                    ],
+                      );
+                    }).toList(),
                     options: CarouselOptions(
                       height: 250,
                       initialPage: 0,

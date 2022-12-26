@@ -1,5 +1,4 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:news/modules/play_store/play%20store.dart';
 import 'package:news/providers/other%20provider.dart';
@@ -8,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../providers/store provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class AddStore extends StatefulWidget {
   const AddStore({Key? key}) : super(key: key);
@@ -51,7 +51,7 @@ class _AddStoreState extends State<AddStore> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -83,22 +83,22 @@ class _AddStoreState extends State<AddStore> {
                   type: TextInputType.text,
                   validate: (value) {
                     if (value!.isEmpty) {
-                      return 'يجب إدخال اسم الأيفونة';
+                      return 'يجب إدخال اسم المتجر';
                     }
                     return null;
                   },
-                  hint: 'أدخل اسم الأيفونة',
+                  hint: 'أدخل اسم المتجر',
                 ),
                 textFormField(
                   controller: link,
                   type: TextInputType.text,
                   validate: (value) {
                     if (value!.isEmpty) {
-                      return 'يجب إدخال الرابط الخاص بالأيفونة';
+                      return 'يجب إدخال وصف المتجر';
                     }
                     return null;
                   },
-                  hint: 'أدخل الرابط الخاص بالأيفونة',
+                  hint: 'أدخل وصف المتجر',
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -107,7 +107,7 @@ class _AddStoreState extends State<AddStore> {
                       Expanded(
                         child: textButton(
                           context,
-                          'اختر صورة الأيفونة',
+                          'اختر صورة المتجر',
                           primaryColor,
                           white,
                           sizeFromWidth(context, 20),
@@ -129,21 +129,21 @@ class _AddStoreState extends State<AddStore> {
                         Expanded(
                           child: textButton(
                             context,
-                            'إنشاء الأيفونة',
+                            'إنشاء المتجر',
                             primaryColor,
                             white,
                             sizeFromWidth(context, 20),
                             FontWeight.bold,
                                 () {
                               if (formKey.currentState!.validate()) {
-                                storeProvider
-                                    .createChampionItem(
-                                    name.text.trim(), link.text.trim())
-                                    .then((value) {
-                                  name.clear();
-                                  link.clear();
-                                });
-                                otherProvider.sendNotification('يوجد شخص جديد يريد إنشاء متجر إلكترونى');
+                                // storeProvider
+                                //     .createChampionItem(
+                                //     name.text.trim(), link.text.trim())
+                                //     .then((value) {
+                                //   name.clear();
+                                //   link.clear();
+                                // });
+                                // otherProvider.sendNotification('يوجد شخص جديد يريد إنشاء متجر إلكترونى');
                               }
                             },
                           ),
@@ -163,23 +163,22 @@ class _AddStoreState extends State<AddStore> {
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: CarouselSlider(
-                      items: [
-                        Row(
+                      items: downBanners.map((e) {
+                        return Row(
                           children: [
                             Expanded(
                               child: Container(
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image:
-                                    AssetImage('assets/images/banner2.png'),
+                                    image: NetworkImage(e.image),
                                     fit: BoxFit.fitWidth,
                                   ),
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                      ],
+                        );
+                      }).toList(),
                       options: CarouselOptions(
                         height: 250,
                         initialPage: 0,

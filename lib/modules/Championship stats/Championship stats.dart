@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import '../home/home.dart';
 
 class ChampionshipStats extends StatefulWidget {
@@ -42,7 +43,7 @@ class _ChampionshipStatsState extends State<ChampionshipStats> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -139,22 +140,22 @@ class _ChampionshipStatsState extends State<ChampionshipStats> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: CarouselSlider(
-                items: [
-                  Row(
+                items: downBanners.map((e) {
+                  return Row(
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
+                              image: NetworkImage(e.image),
                               fit: BoxFit.fitWidth,
                             ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                }).toList(),
                 options: CarouselOptions(
                   height: 250,
                   initialPage: 0,

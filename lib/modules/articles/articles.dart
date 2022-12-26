@@ -2,13 +2,13 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
 import 'package:flutter/material.dart';
 import 'package:news/modules/articles/show%20article.dart';
-import 'package:news/modules/home/home.dart';
 import 'package:news/modules/matches%20statistics/statistics.dart';
 import 'package:news/providers/articles%20provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class Articles extends StatefulWidget {
   const Articles({Key? key}) : super(key: key);
@@ -19,14 +19,6 @@ class Articles extends StatefulWidget {
 
 class _ArticlesState extends State<Articles> {
   late ArticlesProvider articlesProvider;
-
-  @override
-  void initState() {
-    Provider.of<ArticlesProvider>(context, listen: false).getArticles();
-    Provider.of<ArticlesProvider>(context, listen: false)
-        .getOtherArticles(true);
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +49,7 @@ class _ArticlesState extends State<Articles> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -77,11 +69,10 @@ class _ArticlesState extends State<Articles> {
             child: ListView(
               physics: const BouncingScrollPhysics(),
               children: [
-                if (articlesProvider.articles.isNotEmpty)
+                if (articles.isNotEmpty)
                   InkWell(
                     onTap: () {
-                      navigateTo(
-                          context, ShowArticle(articlesProvider.articles[0]));
+                      navigateTo(context, ShowArticle(articles[0]));
                     },
                     child: Container(
                       padding: const EdgeInsets.all(5),
@@ -95,15 +86,14 @@ class _ArticlesState extends State<Articles> {
                         decoration: BoxDecoration(
                           color: lightGrey,
                           borderRadius: BorderRadius.circular(0),
-                          image: DecorationImage(
-                            image: NetworkImage(
-                                articlesProvider.articles[0].poster),
+                          image: articles[0].poster != '' ?DecorationImage(
+                            image: NetworkImage(articles[0].poster),
                             fit: BoxFit.fill,
-                          ),
+                          ) : null,
                         ),
                         alignment: Alignment.bottomCenter,
                         child: textWidget(
-                          articlesProvider.articles[0].title,
+                          articles[0].title,
                           TextDirection.rtl,
                           null,
                           white,
@@ -114,7 +104,7 @@ class _ArticlesState extends State<Articles> {
                     ),
                   ),
                 ConditionalBuilder(
-                  condition: articlesProvider.articles.isNotEmpty,
+                  condition: articles.isNotEmpty,
                   builder: (context) {
                     return SizedBox(
                       height: sizeFromHeight(context, 5),
@@ -122,7 +112,7 @@ class _ArticlesState extends State<Articles> {
                         physics: const BouncingScrollPhysics(),
                         scrollDirection: Axis.horizontal,
                         itemBuilder: (context, index) {
-                          var data = articlesProvider.articles;
+                          var data = articles;
                           if (index != 0) {
                             return InkWell(
                               onTap: () {
@@ -135,10 +125,13 @@ class _ArticlesState extends State<Articles> {
                                 decoration: BoxDecoration(
                                   color: lightGrey,
                                   borderRadius: BorderRadius.circular(10),
-                                  image: DecorationImage(
-                                    image: NetworkImage(data[index].poster),
-                                    fit: BoxFit.cover,
-                                  ),
+                                  image: data[index].poster != ''
+                                      ? DecorationImage(
+                                          image:
+                                              NetworkImage(data[index].poster),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
                                 ),
                                 alignment: Alignment.bottomCenter,
                                 child: textWidget(
@@ -155,7 +148,7 @@ class _ArticlesState extends State<Articles> {
                           }
                           return const SizedBox();
                         },
-                        itemCount: articlesProvider.articles.length,
+                        itemCount: articles.length,
                       ),
                     );
                   },
@@ -163,7 +156,7 @@ class _ArticlesState extends State<Articles> {
                     return const Center();
                   },
                 ),
-                if (articlesProvider.otherArticles.isNotEmpty)
+                if (otherArticles.isNotEmpty)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -177,27 +170,20 @@ class _ArticlesState extends State<Articles> {
                       ),
                     ],
                   ),
-                if (articlesProvider.otherArticles.isNotEmpty)
-                  for (int i = 0;
-                      i < articlesProvider.otherArticles.length;
-                      i++)
-                    itemArticle(
-                        articlesProvider.otherArticles[i].title,
-                        articlesProvider.otherArticles[i].poster,
-                        i,
-                        articlesProvider.otherArticles[i]),
-                if (!articlesProvider.isLoading &&
-                    articlesProvider.otherArticles.isNotEmpty)
-                  itemArticle('', '', articlesProvider.otherArticles.length),
-                if (articlesProvider.isLoading &&
-                    articlesProvider.otherArticles.isNotEmpty)
+                if (otherArticles.isNotEmpty)
+                  for (int i = 0; i < otherArticles.length; i++)
+                    itemArticle(otherArticles[i].title, otherArticles[i].poster,
+                        i, otherArticles[i]),
+                if (!articlesProvider.isLoading && otherArticles.isNotEmpty)
+                  itemArticle('', '', otherArticles.length),
+                if (articlesProvider.isLoading && otherArticles.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(5),
                     child: Center(
                         child:
                             circularProgressIndicator(lightGrey, primaryColor)),
                   ),
-                if (articlesProvider.articles.isEmpty)
+                if (articles.isEmpty)
                   SizedBox(
                     height: sizeFromHeight(context, 2),
                     child: Center(
@@ -214,22 +200,22 @@ class _ArticlesState extends State<Articles> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: CarouselSlider(
-                items: [
-                  Row(
+                items: downBanners.map((e) {
+                  return Row(
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
+                              image: NetworkImage(e.image),
                               fit: BoxFit.fitWidth,
                             ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                }).toList(),
                 options: CarouselOptions(
                   height: 250,
                   initialPage: 0,
@@ -251,7 +237,7 @@ class _ArticlesState extends State<Articles> {
   }
 
   Widget itemArticle(title, poster, index, [model]) {
-    if (index < articlesProvider.otherArticles.length) {
+    if (index < otherArticles.length) {
       return InkWell(
         onTap: () {
           navigateTo(context, ShowArticle(model));
@@ -275,10 +261,12 @@ class _ArticlesState extends State<Articles> {
                 decoration: BoxDecoration(
                   color: primaryColor,
                   borderRadius: BorderRadius.circular(5),
-                  image: DecorationImage(
-                    image: NetworkImage(poster),
-                    fit: BoxFit.cover,
-                  ),
+                  image: poster != ''
+                      ? DecorationImage(
+                          image: NetworkImage(poster),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
               ),
             ],
@@ -286,7 +274,7 @@ class _ArticlesState extends State<Articles> {
         ),
       );
     }
-    if (index == articlesProvider.otherArticles.length) {
+    if (index == otherArticles.length) {
       return InkWell(
         onTap: () {
           articlesProvider.getOtherArticles(false);

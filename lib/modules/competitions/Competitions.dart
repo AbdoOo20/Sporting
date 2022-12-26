@@ -1,14 +1,15 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:news/modules/competitions/register%20competition.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:news/modules/competitions/Fans_vote.dart';
+import 'package:news/providers/competition%20provider.dart';
+import 'package:provider/provider.dart';
 
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import '../home/home.dart';
-import 'package:intl/intl.dart' as intl;
+import 'package:jiffy/jiffy.dart';
 
 class Competitions extends StatefulWidget {
   const Competitions({Key? key}) : super(key: key);
@@ -19,6 +20,8 @@ class Competitions extends StatefulWidget {
 
 class _CompetitionsState extends State<Competitions> {
   String getState(String startTime, String endTime) {
+    startTime = Jiffy(startTime).yMMMd.toString();
+    endTime = Jiffy(endTime).yMMMd.toString();
     if ((intl.DateFormat.yMMMd()
                 .parse(startTime)
                 .difference(intl.DateFormat.yMMMd()
@@ -89,6 +92,7 @@ class _CompetitionsState extends State<Competitions> {
   }
 
   String getDate(String endTime) {
+    endTime = Jiffy(endTime).yMMMd.toString();
     if ((intl.DateFormat.yMMMd()
             .parse(endTime)
             .difference(intl.DateFormat.yMMMd()
@@ -114,8 +118,17 @@ class _CompetitionsState extends State<Competitions> {
     return '';
   }
 
+  late CompetitionProvider competitionProvider;
+
+  @override
+  void initState() {
+    Provider.of<CompetitionProvider>(context, listen: false).getCompetitions();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    competitionProvider = Provider.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF7f0e14),
@@ -140,7 +153,7 @@ class _CompetitionsState extends State<Competitions> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -160,140 +173,93 @@ class _CompetitionsState extends State<Competitions> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('competition')
-                  .orderBy('time', descending: true)
-                  .snapshots(),
-              builder: (ctx, snapShot) {
-                if (snapShot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child:
-                          circularProgressIndicator(lightGrey, primaryColor));
-                }
-                var id = FirebaseAuth.instance.currentUser!.uid;
-                final doc = snapShot.data?.docs;
-                if (doc == null || doc.isEmpty) {
-                  return const Center();
-                } else {
-                  return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: doc.length,
-                    itemBuilder: (ctx, index) {
-                      List users = doc[index]['accept'];
-                      return InkWell(
-                        onTap: () {
-                          List waitingUsers = doc[index]['waiting'];
-                          List acceptUsers = doc[index]['accept'];
-                          if (waitingUsers.contains(id) &&
-                              (getState(doc[index]['startTime'],
-                                          doc[index]['endTime']) ==
-                                      'لم تبدأ' ||
-                                  getState(doc[index]['startTime'],
-                                          doc[index]['endTime']) ==
-                                      'جارى التنفيذ') &&
-                              doc[index]['state'] != 'خاصة') {
-                            showToast(
-                                text: 'انتظر حتى يتم قبولك بالمسابقة',
-                                state: ToastStates.WARNING);
-                          } else if (acceptUsers.contains(id) &&
-                              (getState(doc[index]['startTime'],
-                                          doc[index]['endTime']) ==
-                                      'لم تبدأ' ||
-                                  getState(doc[index]['startTime'],
-                                          doc[index]['endTime']) ==
-                                      'جارى التنفيذ') &&
-                              doc[index]['state'] != 'خاصة') {
-                            navigateAndFinish(
-                                context,
-                                FansVote(doc[index].id,
-                                    getDate(doc[index]['endTime']),getState(doc[index]['startTime'],
-                                        doc[index]['endTime']) ==
-                                        'انتهت'));
-                          } else if ((getState(doc[index]['startTime'],
-                                          doc[index]['endTime']) ==
-                                      'لم تبدأ' ||
-                                  getState(doc[index]['startTime'],
-                                          doc[index]['endTime']) ==
-                                      'جارى التنفيذ') &&
-                              !waitingUsers.contains(id) &&
-                              !acceptUsers.contains(id) &&
-                              doc[index]['state'] != 'خاصة') {
-                            navigateAndFinish(
-                                context, RegisterCompetition(doc[index].id));
-                          } else if (doc[index]['state'] == 'خاصة') {
-                            navigateAndFinish(
-                                context,
-                                FansVote(doc[index].id,
-                                    getDate(doc[index]['endTime']),getState(doc[index]['startTime'],
-                                        doc[index]['endTime']) ==
-                                        'انتهت'));
-                          } else {
-                            showToast(
-                                text: 'هذه المسابقة انتهت',
-                                state: ToastStates.ERROR);
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          margin: const EdgeInsets.all(5),
-                          width: sizeFromWidth(context, 1),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: const Color(0xFF7f0e14),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                getState(doc[index]['startTime'],
-                                    doc[index]['endTime']),
-                                textDirection: TextDirection.rtl,
-                                style: TextStyle(
-                                  fontSize: sizeFromWidth(context, 30),
-                                  fontWeight: FontWeight.bold,
-                                  color: getState(doc[index]['startTime'],
-                                              doc[index]['endTime']) ==
-                                          'انتهت'
-                                      ? Colors.blue
-                                      : getState(doc[index]['startTime'],
-                                                  doc[index]['endTime']) ==
-                                              'لم تبدأ'
-                                          ? Colors.amber
-                                          : Colors.green,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  '${doc[index]['name']} ${users.isNotEmpty ? '\n' : ''} ${users.isEmpty ? '' : 'عدد المشاركين: ${users.length}'}',
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: sizeFromWidth(context, 30),
-                                    fontWeight: FontWeight.bold,
-                                    color: white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Container(
-                                width: sizeFromWidth(context, 7),
-                                height: sizeFromHeight(context, 12,
-                                    hasAppBar: true),
-                                decoration: BoxDecoration(
-                                  color: white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  image: DecorationImage(
-                                      image: NetworkImage(doc[index]['image']),
-                                      fit: BoxFit.cover),
-                                ),
-                              ),
-                            ],
+            child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: competitionProvider.competitions.length,
+              itemBuilder: (ctx, index) {
+                return InkWell(
+                  onTap: () {
+                    navigateAndFinish(
+                      context,
+                      FansVote(
+                        competitionProvider.competitions[index],
+                        getDate(
+                            competitionProvider.competitions[index].endDate),
+                        getState(
+                                    competitionProvider
+                                        .competitions[index].startDate,
+                                    competitionProvider
+                                        .competitions[index].endDate) ==
+                                'انتهت'
+                            ? true
+                            : false,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    margin: const EdgeInsets.all(5),
+                    width: sizeFromWidth(context, 1),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF7f0e14),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          getState(
+                              competitionProvider.competitions[index].startDate,
+                              competitionProvider.competitions[index].endDate),
+                          textDirection: TextDirection.rtl,
+                          style: TextStyle(
+                            fontSize: sizeFromWidth(context, 30),
+                            fontWeight: FontWeight.bold,
+                            color: getState(
+                                        competitionProvider
+                                            .competitions[index].startDate,
+                                        competitionProvider
+                                            .competitions[index].endDate) ==
+                                    'انتهت'
+                                ? Colors.blue
+                                : getState(
+                                            competitionProvider
+                                                .competitions[index].startDate,
+                                            competitionProvider
+                                                .competitions[index].endDate) ==
+                                        'لم تبدأ'
+                                    ? Colors.amber
+                                    : Colors.green,
                           ),
                         ),
-                      );
-                    },
-                  );
-                }
+                        Expanded(
+                          child: Text(
+                            '${competitionProvider.competitions[index].name}\nعدد المتسابقين: ${competitionProvider.competitions[index].subscribers}',
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                              fontSize: sizeFromWidth(context, 30),
+                              fontWeight: FontWeight.bold,
+                              color: white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          width: sizeFromWidth(context, 7),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
+                          decoration: BoxDecoration(
+                            color: white,
+                            borderRadius: BorderRadius.circular(10),
+                            image: DecorationImage(
+                                image: NetworkImage(competitionProvider
+                                    .competitions[index].image),
+                                fit: BoxFit.cover),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
           ),
@@ -304,22 +270,22 @@ class _CompetitionsState extends State<Competitions> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: CarouselSlider(
-                items: [
-                  Row(
+                items: downBanners.map((e) {
+                  return Row(
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
+                              image: NetworkImage(e.image),
                               fit: BoxFit.fitWidth,
                             ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                }).toList(),
                 options: CarouselOptions(
                   height: 250,
                   initialPage: 0,

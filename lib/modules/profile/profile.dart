@@ -2,24 +2,30 @@
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:news/modules/profile/edit%20profile.dart';
 import 'package:news/modules/profile/report.dart';
+import 'package:news/providers/chat%20provider.dart';
 import 'package:news/providers/user%20provider.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../network/cash_helper.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+
+import '../../shared/const.dart';
 import '../home/home.dart';
+import 'edit profile.dart';
 
 class Profile extends StatefulWidget {
-  String id;
+  String token;
   String page;
+  String chatID;
+  bool isChatAdmin;
+  bool isUserBlocked;
 
-  Profile(this.id, this.page, {Key? key}) : super(key: key);
+  Profile(this.token, this.page, this.isChatAdmin, this.isUserBlocked, this.chatID, {Key? key}) : super(key: key);
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -27,17 +33,14 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   late UserProvider userProvider;
-
-  @override
-  void initState() {
-    Provider.of<UserProvider>(context, listen: false).getUserData(widget.id);
-    super.initState();
-  }
+  late ChatProvider chatProvider;
 
   @override
   Widget build(BuildContext context) {
-    var currentUser = FirebaseAuth.instance.currentUser!.uid;
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
     userProvider = Provider.of(context);
+    chatProvider = Provider.of(context);
     return Scaffold(
       backgroundColor: white,
       appBar: AppBar(
@@ -64,7 +67,7 @@ class _ProfileState extends State<Profile> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -86,7 +89,7 @@ class _ProfileState extends State<Profile> {
               ),
       ),
       body: ConditionalBuilder(
-        condition: userProvider.userModel != null,
+        condition: !userProvider.isLoading,
         builder: (context) {
           return SizedBox(
             width: sizeFromWidth(context, 1),
@@ -96,7 +99,9 @@ class _ProfileState extends State<Profile> {
                 SizedBox(height: sizeFromHeight(context, 90, hasAppBar: true)),
                 Center(
                   child: Stack(
-                    alignment: currentUser == widget.id ? Alignment.bottomLeft : Alignment.topLeft,
+                    alignment: token == widget.token
+                        ? Alignment.bottomLeft
+                        : Alignment.topLeft,
                     clipBehavior: Clip.none,
                     children: [
                       CircleAvatar(
@@ -105,15 +110,15 @@ class _ProfileState extends State<Profile> {
                         child: CircleAvatar(
                           radius: sizeFromHeight(context, 16),
                           backgroundColor: primaryColor,
-                          backgroundImage: userProvider.userModel!.image != ''
-                              ? NetworkImage(userProvider.userModel!.image)
+                          backgroundImage: userModel.image != ''
+                              ? NetworkImage(userModel.image)
                               : null,
                         ),
                       ),
-                      if (widget.id == currentUser && widget.page != 'chat')
+                      if (token == widget.token && widget.page != 'chat')
                         InkWell(
                           onTap: () {
-                            userProvider.changeUserImage(context);
+                            userProvider.changeUserImage(context, token);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(5),
@@ -132,10 +137,10 @@ class _ProfileState extends State<Profile> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (widget.id != currentUser)
+                    if (token != widget.token && id.toString() != widget.token)
                       InkWell(
-                        onTap: (){
-                          navigateTo(context, Report(widget.id));
+                        onTap: () {
+                          navigateTo(context, Report(widget.token));
                         },
                         child: Container(
                           padding: const EdgeInsets.all(10),
@@ -160,7 +165,7 @@ class _ProfileState extends State<Profile> {
                         color: primaryColor,
                       ),
                       child: textWidget(
-                        userProvider.userModel!.userName,
+                        userModel.name,
                         null,
                         null,
                         white,
@@ -168,6 +173,29 @@ class _ProfileState extends State<Profile> {
                         FontWeight.bold,
                       ),
                     ),
+                    if (token != widget.token && id.toString() != widget.token && widget.isChatAdmin)
+                      InkWell(
+                        onTap: () {
+                          chatProvider.blockUser(widget.chatID, widget.token);
+                          widget.isUserBlocked = !widget.isUserBlocked;
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          margin: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: primaryColor,
+                          ),
+                          child: textWidget(
+                            widget.isUserBlocked ? 'إلغاء الحظر' : 'حظر',
+                            null,
+                            TextAlign.center,
+                            white,
+                            sizeFromWidth(context, 25),
+                            FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 Expanded(
@@ -185,7 +213,7 @@ class _ProfileState extends State<Profile> {
                         ),
                         child: Column(
                           children: [
-                            if (widget.id == currentUser && widget.page != 'chat')
+                            if (token == widget.token && widget.page != 'chat')
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -200,7 +228,7 @@ class _ProfileState extends State<Profile> {
                                     child: InkWell(
                                       onTap: () {
                                         navigateAndFinish(
-                                            context, EditProfile(widget.id));
+                                            context, EditProfile(token, widget.isChatAdmin, widget.isUserBlocked, widget.chatID));
                                       },
                                       child: textWidget(
                                         'تعديل',
@@ -216,7 +244,7 @@ class _ProfileState extends State<Profile> {
                                 ],
                               ),
                             textWidget(
-                              userProvider.userModel!.about,
+                              userModel.bio,
                               null,
                               TextAlign.end,
                               white,
@@ -265,14 +293,14 @@ class _ProfileState extends State<Profile> {
                                     children: [
                                       InkWell(
                                         onTap: () async {
-                                          dynamic link = Uri.parse(
-                                              userProvider.userModel!.facebook);
+                                          dynamic link =
+                                              Uri.parse(userModel.facebook);
                                           try {
                                             await launchUrl(link);
                                           } catch (e) {
                                             showToast(
                                                 text:
-                                                    '${userProvider.userModel!.userName} Do not put facebook link or there are error in link',
+                                                    'لم يتم وضع رابط أو يوجد خطأ بالرابط',
                                                 state: ToastStates.ERROR);
                                           }
                                         },
@@ -281,14 +309,14 @@ class _ProfileState extends State<Profile> {
                                       ),
                                       InkWell(
                                         onTap: () async {
-                                          dynamic link = Uri.parse(
-                                              userProvider.userModel!.snapchat);
+                                          dynamic link =
+                                              Uri.parse(userModel.snapchat);
                                           try {
                                             await launchUrl(link);
                                           } catch (e) {
                                             showToast(
                                                 text:
-                                                    '${userProvider.userModel!.userName} Do not put snapchat link or there are error in link',
+                                                    'لم يتم وضع رابط أو يوجد خطأ بالرابط',
                                                 state: ToastStates.ERROR);
                                           }
                                         },
@@ -297,14 +325,14 @@ class _ProfileState extends State<Profile> {
                                       ),
                                       InkWell(
                                         onTap: () async {
-                                          dynamic link = Uri.parse(
-                                              userProvider.userModel!.tiktok);
+                                          dynamic link =
+                                              Uri.parse(userModel.tiktok);
                                           try {
                                             await launchUrl(link);
                                           } catch (e) {
                                             showToast(
                                                 text:
-                                                    '${userProvider.userModel!.userName} Do not put tiktok link or there are error in link',
+                                                    'لم يتم وضع رابط أو يوجد خطأ بالرابط',
                                                 state: ToastStates.ERROR);
                                           }
                                         },
@@ -313,14 +341,14 @@ class _ProfileState extends State<Profile> {
                                       ),
                                       InkWell(
                                         onTap: () async {
-                                          dynamic link = Uri.parse(userProvider
-                                              .userModel!.instagram);
+                                          dynamic link =
+                                              Uri.parse(userModel.instagram);
                                           try {
                                             await launchUrl(link);
                                           } catch (e) {
                                             showToast(
                                                 text:
-                                                    '${userProvider.userModel!.userName} Do not put instagram link or there are error in link',
+                                                    'لم يتم وضع رابط أو يوجد خطأ بالرابط',
                                                 state: ToastStates.ERROR);
                                           }
                                         },
@@ -329,14 +357,14 @@ class _ProfileState extends State<Profile> {
                                       ),
                                       InkWell(
                                         onTap: () async {
-                                          dynamic link = Uri.parse(
-                                              userProvider.userModel!.twitter);
+                                          dynamic link =
+                                              Uri.parse(userModel.twitter);
                                           try {
                                             await launchUrl(link);
                                           } catch (e) {
                                             showToast(
                                                 text:
-                                                    '${userProvider.userModel!.userName} Do not put twitter link or there are error in link',
+                                                    'لم يتم وضع رابط أو يوجد خطأ بالرابط',
                                                 state: ToastStates.ERROR);
                                           }
                                         },
@@ -365,7 +393,7 @@ class _ProfileState extends State<Profile> {
                                 children: [
                                   Icon(Icons.location_on, color: white),
                                   textWidget(
-                                    userProvider.userModel!.country,
+                                    userModel.country,
                                     null,
                                     TextAlign.center,
                                     white,
@@ -400,7 +428,9 @@ class _ProfileState extends State<Profile> {
                                       Icon(Icons.email, color: white),
                                       Expanded(
                                         child: textWidget(
-                                          currentUser == widget.id ? userProvider.userModel!.email : 'بيانات خاصة بصاحب الحساب',
+                                          token == widget.token
+                                              ? userModel.email
+                                              : 'بيانات خاصة بصاحب الحساب',
                                           null,
                                           TextAlign.end,
                                           white,
@@ -427,7 +457,9 @@ class _ProfileState extends State<Profile> {
                                       Icon(Icons.call, color: white),
                                       Expanded(
                                         child: textWidget(
-                                          currentUser == widget.id ? userProvider.userModel!.phone : 'بيانات خاصة بصاحب الحساب',
+                                          token == widget.token
+                                              ? userModel.phone
+                                              : 'بيانات خاصة بصاحب الحساب',
                                           null,
                                           TextAlign.end,
                                           white,
@@ -455,12 +487,12 @@ class _ProfileState extends State<Profile> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Icon(
-                                    userProvider.userModel!.kind == 'ذكر'
+                                    userModel.type == 'ذكر'
                                         ? Icons.male
                                         : Icons.female,
                                     color: white),
                                 textWidget(
-                                  userProvider.userModel!.kind,
+                                  userModel.type,
                                   null,
                                   TextAlign.center,
                                   white,
@@ -482,23 +514,22 @@ class _ProfileState extends State<Profile> {
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: CarouselSlider(
-                      items: [
-                        Row(
+                      items: downBanners.map((e) {
+                        return Row(
                           children: [
                             Expanded(
                               child: Container(
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image:
-                                        AssetImage('assets/images/banner2.png'),
+                                    image: NetworkImage(e.image),
                                     fit: BoxFit.fitWidth,
                                   ),
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                      ],
+                        );
+                      }).toList(),
                       options: CarouselOptions(
                         height: 250,
                         initialPage: 0,

@@ -1,26 +1,160 @@
-import 'dart:developer';
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-import 'package:news/models/user%20model.dart';
+import 'package:news/models/competition/competition%20comment%20model.dart';
+import 'package:news/network/cash_helper.dart';
 import 'package:news/shared/Components.dart';
-import 'package:video_player/video_player.dart';
+
+import '../models/competition/competition model.dart';
+import '../models/competition/competitor model.dart';
 
 class CompetitionProvider with ChangeNotifier {
   bool isLoading = false;
   File? pickedImageCountry;
-  File? pickedImageClub;
-  File? pickedVideo;
+  File? pickedCompetitorImage;
   final picker = ImagePicker();
   String dateAfterEdit = '';
-  int number = 0;
-  double greatScore = 0;
-  double score = 0;
+  List<CompetitionModel> competitions = [];
+  List<CompetitorModel> competitors = [];
+  List<CompetitionCommentModel> comments = [];
+  double score = 0.0;
+
+  Future<void> getCompetitions() async {
+    competitions = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/competitions');
+    var response = await http.get(
+      url,
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    List allCompetitions = data['data'];
+    if (response.statusCode == 200) {
+      for (var element in allCompetitions) {
+        competitions.add(CompetitionModel.fromJSON(element));
+      }
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> getAllCompetitors(int competitionID) async {
+    competitors = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/contestants?competition_id=$competitionID');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    List allCompetitions = data['data'];
+    if (response.statusCode == 200) {
+      for (var element in allCompetitions) {
+        competitors.add(CompetitorModel.fromJSON(element));
+      }
+      competitors.sort((a, b) {
+        double aScore = double.parse(a.score);
+        double bScore = double.parse(b.score);
+        return bScore.compareTo(aScore);
+      });
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> addComment(
+      int competitionID, int competitorID, String comment) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var userID = CacheHelper.getData(key: 'id') ?? '';
+    var url =
+        Uri.parse('http://iffsma-2030.com/public/api/v1/user/add/comment');
+    Map<String, dynamic> competitionCommentModel = {
+      'user_id': userID.toString(),
+      'competition_id': competitionID.toString(),
+      'contestant_id': competitorID.toString(),
+      'comment': comment,
+    };
+    var body1 = jsonEncode(competitionCommentModel);
+    var body2 = jsonDecode(body1);
+    var response = await http.post(
+      url,
+      body: body2,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم التعليق بنجاح', state: ToastStates.SUCCESS);
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> getComments(int competitorID) async {
+    comments = [];
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/contestant/comments?contestant_id=$competitorID');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> data = json.decode(response.body);
+    var commentList = data['data'];
+    if (response.statusCode == 200) {
+      commentList.forEach((element) {
+        comments.add(CompetitionCommentModel.fromJSON(element));
+      });
+      notifyListeners();
+    } else {
+      showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  Future<void> addVote(int competitionID, int competitorID) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var userID = CacheHelper.getData(key: 'id') ?? '';
+    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/user/add/vote');
+    Map<String, dynamic> data = {
+      'user_id': userID.toString(),
+      'competition_id': competitionID.toString(),
+      'contestant_id': competitorID.toString(),
+    };
+    var response = await http.post(
+      url,
+      body: data,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    Map<String, dynamic> getData = json.decode(response.body);
+    if (response.statusCode == 200 && getData['status'] == true) {
+      showToast(text: 'تم التصويت بنجاح', state: ToastStates.SUCCESS);
+      notifyListeners();
+    } else {
+      showToast(text: getData['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
 
   void selectCountryImage() async {
     var pickedImageFile = await picker.pickImage(source: ImageSource.gallery);
@@ -32,132 +166,94 @@ class CompetitionProvider with ChangeNotifier {
     }
   }
 
-  void selectClubImage() async {
+  void selectCompetitorImage() async {
     var pickedImageFile = await picker.pickImage(source: ImageSource.gallery);
-    pickedImageClub = File(pickedImageFile!.path);
+    pickedCompetitorImage = File(pickedImageFile!.path);
     notifyListeners();
-    if (pickedImageCountry != null) {
+    if (pickedCompetitorImage != null) {
       showToast(
-          text: 'تم اختيار صورة النادى بنجاح', state: ToastStates.SUCCESS);
+          text: 'تم اختيار صورة المتسابق بنجاح', state: ToastStates.SUCCESS);
     }
   }
 
-  void pickVideo() async {
-    try {
-      var pickedFile = await picker.pickVideo(
-        source: ImageSource.gallery,
-        maxDuration: const Duration(seconds: 60),
-      );
-      if (pickedFile != null) {
-        pickedVideo = File(pickedFile.path);
-        VideoPlayerController videoPlayerController =
-            VideoPlayerController.file(File(pickedFile.path));
-        await videoPlayerController.initialize();
-        if (videoPlayerController.value.duration.inSeconds > 30) {
-          pickedFile = null;
-          pickedVideo = null;
-          notifyListeners();
-          showToast(
-              text: 'لا يتم اختيار فيديو يتخطى ال 30 ثانيه',
-              state: ToastStates.WARNING);
-          notifyListeners();
-        } else {
-          showToast(
-              text: 'تم اختيار الفيديو بنجاح', state: ToastStates.SUCCESS);
-        }
-      }
-    } catch (e) {
-      showToast(text: e.toString(), state: ToastStates.ERROR);
-    }
-  }
+  // void pickVideo() async {
+  //   try {
+  //     var pickedFile = await picker.pickVideo(
+  //       source: ImageSource.gallery,
+  //       maxDuration: const Duration(seconds: 60),
+  //     );
+  //     if (pickedFile != null) {
+  //       pickedVideo = File(pickedFile.path);
+  //       VideoPlayerController videoPlayerController =
+  //           VideoPlayerController.file(File(pickedFile.path));
+  //       await videoPlayerController.initialize();
+  //       if (videoPlayerController.value.duration.inSeconds > 30) {
+  //         pickedFile = null;
+  //         pickedVideo = null;
+  //         notifyListeners();
+  //         showToast(
+  //             text: 'لا يتم اختيار فيديو يتخطى ال 30 ثانيه',
+  //             state: ToastStates.WARNING);
+  //         notifyListeners();
+  //       } else {
+  //         showToast(
+  //             text: 'تم اختيار الفيديو بنجاح', state: ToastStates.SUCCESS);
+  //       }
+  //     }
+  //   } catch (e) {
+  //     showToast(text: e.toString(), state: ToastStates.ERROR);
+  //   }
+  // }
 
   void shareInCompetition(
     String competitionID,
     String nameCompetitor,
     String position,
-    UserModel userModel,
     String videoLink,
   ) async {
     if (pickedImageCountry == null) {
       showToast(text: 'يجب اختيار صورة الدولة', state: ToastStates.ERROR);
-    } else if (pickedImageClub == null) {
-      showToast(text: 'يجب اختيار صورة النادى', state: ToastStates.ERROR);
-    } else if (pickedVideo == null && videoLink == '') {
-      showToast(
-          text: 'يجب اختيار فيديو لا يزيد عن 30 ثانيه أو ضع رابط فيديو',
-          state: ToastStates.ERROR);
+    } else if (pickedCompetitorImage == null) {
+      showToast(text: 'يجب اختيار صورة المتسابق', state: ToastStates.ERROR);
     } else {
       isLoading = true;
       notifyListeners();
-      showToast(text: 'جارى رفع الصور و الفيديو', state: ToastStates.ERROR);
-      String countryText = Uri.file(pickedImageCountry!.path).pathSegments.last;
-      var refCountry = FirebaseStorage.instance
-          .ref()
-          .child('country image')
-          .child(countryText);
-      await refCountry.putFile(pickedImageCountry!);
-      final country = await refCountry.getDownloadURL();
-
-      String clubText = Uri.file(pickedImageClub!.path).pathSegments.last;
-      var refClub =
-          FirebaseStorage.instance.ref().child('club image').child(clubText);
-      await refClub.putFile(pickedImageClub!);
-      final club = await refClub.getDownloadURL();
-
-      String videoText = '';
-      String video = '';
-      if (pickedVideo != null) {
-        videoText = Uri.file(pickedVideo!.path).pathSegments.last;
-        var refVideo = FirebaseStorage.instance
-            .ref()
-            .child('competition videos')
-            .child(videoText);
-        await refVideo.putFile(pickedVideo!);
-        video = await refVideo.getDownloadURL();
+      showToast(text: 'جارى رفع الصور و الفيديو', state: ToastStates.WARNING);
+      String token = CacheHelper.getData(key: 'token') ?? '';
+      var headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token'
+      };
+      var request = http.MultipartRequest('POST',
+          Uri.parse('http://iffsma-2030.com/public/api/v1/user/Participate'));
+      request.fields.addAll({
+        'name': nameCompetitor,
+        'center': position,
+        'video_link': videoLink,
+        'competition_id': competitionID
+      });
+      request.files.add(await http.MultipartFile.fromPath(
+          'image', pickedCompetitorImage!.path));
+      request.files.add(await http.MultipartFile.fromPath(
+          'country_image', pickedImageCountry!.path));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      var data = await response.stream.bytesToString();
+      final decodedData = json.decode(data);
+      if (response.statusCode == 200) {
+        isLoading = false;
+        pickedImageCountry = null;
+        pickedCompetitorImage = null;
+        showToast(
+            text: 'انتظر حتى يتم قبولك بالمسابقة', state: ToastStates.SUCCESS);
+        notifyListeners();
+      } else {
+        isLoading = false;
+        pickedImageCountry = null;
+        pickedCompetitorImage = null;
+        showToast(text: decodedData['message'], state: ToastStates.ERROR);
+        notifyListeners();
       }
-
-      var currentUser = FirebaseAuth.instance.currentUser!.uid;
-      FirebaseFirestore.instance
-          .collection('competition')
-          .doc(competitionID)
-          .collection('users')
-          .doc(currentUser)
-          .set({
-        'video': videoLink == '' ? video : videoLink,
-        'videoName': videoText,
-        'club': club,
-        'clubName': clubText,
-        'country': country,
-        'countryName': countryText,
-        'nameCompetitor': nameCompetitor,
-        'position': position,
-        'image': userModel.image,
-        'name': userModel.userName,
-        'state': 'waiting',
-        'time': Timestamp.now(),
-        'score': 0.0,
-        'users': [],
-      });
-      var usersWaiting = await FirebaseFirestore.instance
-          .collection('competition')
-          .doc(competitionID)
-          .get();
-      List users = usersWaiting['waiting'];
-      users.add(currentUser);
-      notifyListeners();
-      FirebaseFirestore.instance
-          .collection('competition')
-          .doc(competitionID)
-          .update({
-        'waiting': users,
-      });
-      isLoading = false;
-      pickedImageCountry = null;
-      pickedImageClub = null;
-      pickedVideo = null;
-      notifyListeners();
-      showToast(
-          text: 'انتظر حتى يتم قبولك بالمسابقة', state: ToastStates.WARNING);
     }
   }
 
@@ -201,63 +297,9 @@ class CompetitionProvider with ChangeNotifier {
     }
   }
 
-  Future<void> sendComment(
-      String competitionID, String userID, String comment) async {
-    log(competitionID);
-    log(userID);
-    var id = FirebaseAuth.instance.currentUser!.uid;
-    var userData =
-        await FirebaseFirestore.instance.collection('users').doc(id).get();
-    FirebaseFirestore.instance
-        .collection('competition')
-        .doc(competitionID)
-        .collection('users')
-        .doc(userID)
-        .collection('comments')
-        .add({
-      'text': comment,
-      'time': Timestamp.now(),
-      'id': id,
-      'name': userData['userName'],
-      'image': userData['image'],
-      'dateTimePerDay': DateFormat.yMMMd().format(DateTime.now()),
-      'dateTimePerHour': DateFormat.jm().format(DateTime.now()),
-    });
+  void getGoldenMedal() {
+    score = 0.0;
+    score = double.parse(competitors[0].score);
     notifyListeners();
-  }
-
-  void getCompetitionNumber(String competitionID) {
-    score = 0;
-    number = 0;
-    FirebaseFirestore.instance
-        .collection('competition')
-        .doc(competitionID)
-        .collection('users')
-        .get()
-        .then((value) {
-      for (var element in value.docs) {
-        score += element['score'];
-      }
-      var result = score / 0.01;
-      number = result.round().toInt();
-      notifyListeners();
-    });
-  }
-
-  void getGoldenMedal(String competitionID) {
-    greatScore = 0;
-    FirebaseFirestore.instance
-        .collection('competition')
-        .doc(competitionID)
-        .collection('users')
-        .get()
-        .then((value) {
-      for (var element in value.docs) {
-        if (greatScore < element['score']) {
-          greatScore = element['score'];
-        }
-      }
-      notifyListeners();
-    });
   }
 }

@@ -1,28 +1,30 @@
 // ignore_for_file: must_be_immutable, use_build_context_synchronously
 
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
-import 'package:news/modules/competitions/comments.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:news/modules/competitions/register%20competition.dart';
 import 'package:news/modules/show%20video/show%20video.dart';
 import 'package:news/modules/show%20video/youtube%20video.dart';
 import 'package:news/providers/competition%20provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../models/competition/competition model.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import 'Competitions.dart';
+import 'comments.dart';
 
 class FansVote extends StatefulWidget {
-  String docId;
-  String date;
-  bool end;
+  CompetitionModel competitionModel;
+  String endDate;
+  bool isEnd;
 
-  FansVote(this.docId, this.date, this.end, {Key? key}) : super(key: key);
+  FansVote(this.competitionModel, this.endDate, this.isEnd, {Key? key})
+      : super(key: key);
 
   @override
   State<FansVote> createState() => _FansVoteState();
@@ -34,13 +36,16 @@ class _FansVoteState extends State<FansVote> {
   @override
   void initState() {
     Provider.of<CompetitionProvider>(context, listen: false)
-        .updateDate(widget.date);
+        .getAllCompetitors(widget.competitionModel.id)
+        .then((value) {
+      if (widget.isEnd == true) {
+        Provider.of<CompetitionProvider>(context, listen: false)
+            .getGoldenMedal();
+      }
+    });
     Provider.of<CompetitionProvider>(context, listen: false)
-        .getCompetitionNumber(widget.docId);
-    if (widget.end == true) {
-      Provider.of<CompetitionProvider>(context, listen: false)
-          .getGoldenMedal(widget.docId);
-    }
+        .updateDate(widget.endDate);
+
     super.initState();
   }
 
@@ -72,7 +77,7 @@ class _FansVoteState extends State<FansVote> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -85,6 +90,16 @@ class _FansVoteState extends State<FansVote> {
             navigateAndFinish(context, const Competitions());
           },
         ),
+        actions: [
+          if (widget.competitionModel.type == 'public')
+            IconButton(
+              icon: const Icon(Icons.add_circle),
+              onPressed: () {
+                navigateTo(
+                    context, RegisterCompetition(widget.competitionModel.id));
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -93,7 +108,7 @@ class _FansVoteState extends State<FansVote> {
             alignment: Alignment.center,
             width: sizeFromWidth(context, 1),
             child: Text(
-              'عدد الأصوات المرشحة من الجماهير: ${competitionProvider.number}',
+              'عدد الأصوات المرشحة من الجماهير: ${widget.competitionModel.numberVotes}',
               style: TextStyle(
                 fontSize: sizeFromWidth(context, 25),
                 fontWeight: FontWeight.bold,
@@ -125,389 +140,331 @@ class _FansVoteState extends State<FansVote> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 5, left: 5, right: 5),
-                      child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('competition')
-                            .doc(widget.docId)
-                            .collection('users')
-                            .orderBy('time', descending: false)
-                            .snapshots(),
-                        builder: (ctx, snapShot) {
-                          if (snapShot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(
-                                child: circularProgressIndicator(
-                                    lightGrey, primaryColor));
-                          }
-                          var id = FirebaseAuth.instance.currentUser!.uid;
-                          final doc = snapShot.data?.docs;
-                          if (doc == null || doc.isEmpty) {
-                            return const Center();
-                          } else {
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemBuilder: (ctx, index) {
-                                return FlipCard(
-                                  front: Column(
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (ctx, index) {
+                          return FlipCard(
+                            front: Column(
+                              children: [
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Container(
+                                      width: sizeFromWidth(context, 2.5),
+                                      height: sizeFromHeight(context, 5.5,
+                                          hasAppBar: true),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                            begin: Alignment.centerLeft,
+                                            end: Alignment.centerRight,
+                                            colors: [
+                                              Color(0xFF373a41),
+                                              Color(0xFF484b50),
+                                            ]),
+                                        borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(20),
+                                            topRight: Radius.circular(20)),
+                                        image: DecorationImage(
+                                          image: NetworkImage(
+                                              competitionProvider
+                                                  .competitors[index].image),
+                                          fit: BoxFit.fitWidth,
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      left: 5,
+                                      top: 5,
+                                      child: Container(
+                                        width: sizeFromWidth(context, 15),
+                                        height: sizeFromWidth(context, 15),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          image: DecorationImage(
+                                            image: NetworkImage(
+                                                competitionProvider
+                                                    .competitors[index]
+                                                    .countryImage),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 5,
+                                      top: 5,
+                                      child: Container(
+                                        width: sizeFromWidth(context, 15),
+                                        height: sizeFromWidth(context, 15),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          image: DecorationImage(
+                                            image: AssetImage(
+                                                "assets/images/logo 2.jpeg"),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  alignment: Alignment.centerLeft,
+                                  children: [
+                                    Container(
+                                      color: const Color(0xFF1e1e1e),
+                                      width: sizeFromWidth(context, 2.5),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 2),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            competitionProvider
+                                                .competitors[index].name,
+                                            style: TextStyle(
+                                              height: 1.2,
+                                              fontSize:
+                                                  sizeFromWidth(context, 25),
+                                              color: white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            competitionProvider
+                                                .competitors[index].center,
+                                            style: TextStyle(
+                                              height: 1.2,
+                                              fontSize:
+                                                  sizeFromWidth(context, 30),
+                                              color: white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (competitionProvider.score ==
+                                            double.parse(competitionProvider
+                                                .competitors[index].score) &&
+                                        widget.isEnd == true)
+                                      Container(
+                                        margin: const EdgeInsets.only(left: 10),
+                                        child: const Icon(
+                                            FontAwesomeIcons.medal,
+                                            color: Colors.amber),
+                                      ),
+                                  ],
+                                ),
+                                Stack(
+                                  alignment: Alignment.bottomRight,
+                                  children: [
+                                    Container(
+                                      width: sizeFromWidth(context, 2.5),
+                                      height: sizeFromHeight(context, 10,
+                                          hasAppBar: true),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF151515),
+                                        borderRadius: BorderRadius.only(
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20)),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 7),
+                                      child: Center(
+                                        child: CircularPercentIndicator(
+                                          radius: sizeFromWidth(context, 15),
+                                          percent: double.parse(
+                                                      competitionProvider
+                                                          .competitors[index]
+                                                          .score) >=
+                                                  100.0
+                                              ? 1.0
+                                              : (double.parse(double.parse(
+                                                          competitionProvider
+                                                              .competitors[
+                                                                  index]
+                                                              .score)
+                                                      .toStringAsFixed(2)) /
+                                                  1000),
+                                          backgroundColor:
+                                              const Color(0xFF202020),
+                                          progressColor: (competitionProvider
+                                                          .score ==
+                                                      double.parse(
+                                                          competitionProvider
+                                                              .competitors[
+                                                                  index]
+                                                              .score) &&
+                                                  widget.isEnd == true
+                                              ? Colors.amber
+                                              : const Color(0xFF035cd2)),
+                                          center: Text(
+                                            double.parse((double.parse(
+                                                            competitionProvider
+                                                                .competitors[
+                                                                    index]
+                                                                .score) *
+                                                        100)
+                                                    .toStringAsFixed(0))
+                                                .toString(),
+                                            style: TextStyle(
+                                              fontSize:
+                                                  sizeFromWidth(context, 35),
+                                              color: white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const Positioned(
+                                      bottom: 5,
+                                      right: 5,
+                                      child: Icon(Icons.restart_alt,
+                                          color: Color(0xFF9f9f9f)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            back: Container(
+                              margin: const EdgeInsets.only(
+                                  bottom: 10, left: 15, right: 15),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF151515),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      width: sizeFromWidth(context, 1),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF39373a),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(20),
+                                          topRight: Radius.circular(20),
+                                        ),
+                                      ),
+                                      child: IconButton(
+                                          onPressed: () {
+                                            if (competitionProvider
+                                                .competitors[index].videoLink
+                                                .contains('youtube')) {
+                                              navigateTo(
+                                                  context,
+                                                  YoutubeVideo(
+                                                      competitionProvider
+                                                          .competitors[index]
+                                                          .videoLink,
+                                                      ''));
+                                            } else {
+                                              navigateTo(
+                                                  context,
+                                                  ShowVideo(competitionProvider
+                                                      .competitors[index]
+                                                      .videoLink));
+                                            }
+                                          },
+                                          icon: Icon(Icons.play_circle,
+                                              color: white)),
+                                    ),
+                                  ),
+                                  if(!widget.isEnd)
+                                    Row(
                                     children: [
-                                      Stack(
-                                        clipBehavior: Clip.none,
-                                        children: [
-                                          Container(
-                                            width: sizeFromWidth(context, 2.5),
-                                            height: sizeFromHeight(context, 5.5,
-                                                hasAppBar: true),
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                  begin: Alignment.centerLeft,
-                                                  end: Alignment.centerRight,
-                                                  colors: [
-                                                    Color(0xFF373a41),
-                                                    Color(0xFF484b50),
-                                                  ]),
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                      topLeft:
-                                                          Radius.circular(20),
-                                                      topRight:
-                                                          Radius.circular(20)),
-                                              image: DecorationImage(
-                                                image: NetworkImage(doc[index]
-                                                        .id
-                                                        .contains('image')
-                                                    ? doc[index][
-                                                        'pickedImageCompetitor']
-                                                    : doc[index]['image']),
-                                                fit: BoxFit.fitWidth,
-                                              ),
+                                      Expanded(
+                                        child: TextButton(
+                                          style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty.all(
+                                                      const Color(0xFF39373a))),
+                                          onPressed: () async {
+                                            competitionProvider.addVote(
+                                                widget.competitionModel.id,
+                                                competitionProvider
+                                                    .competitors[index].id);
+                                          },
+                                          child: Text(
+                                            'أضف تصويت',
+                                            style: TextStyle(
+                                              color: white,
+                                              fontSize:
+                                                  sizeFromWidth(context, 30),
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          Positioned(
-                                            left: 5,
-                                            top: 5,
-                                            child: Container(
-                                              width: sizeFromWidth(context, 15),
-                                              height:
-                                                  sizeFromWidth(context, 15),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      doc[index]['country']),
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            right: 5,
-                                            top: 5,
-                                            child: Container(
-                                              width: sizeFromWidth(context, 15),
-                                              height:
-                                                  sizeFromWidth(context, 15),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      doc[index]['club']),
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Stack(
-                                        clipBehavior: Clip.none,
-                                        alignment: Alignment.centerLeft,
-                                        children: [
-                                          Container(
-                                            color: const Color(0xFF1e1e1e),
-                                            width: sizeFromWidth(context, 2.5),
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 2),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  doc[index]['nameCompetitor'],
-                                                  style: TextStyle(
-                                                    height: 1.2,
-                                                    fontSize: sizeFromWidth(
-                                                        context, 25),
-                                                    color: white,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  doc[index]['position'],
-                                                  style: TextStyle(
-                                                    height: 1.2,
-                                                    fontSize: sizeFromWidth(
-                                                        context, 30),
-                                                    color: white,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          if (competitionProvider.greatScore ==
-                                                  doc[index]['score'] &&
-                                              widget.end == true)
-                                            Container(
-                                              margin: const EdgeInsets.only(
-                                                  left: 10),
-                                              child: const Icon(
-                                                  FontAwesomeIcons.medal,
-                                                  color: Colors.amber),
-                                            ),
-                                        ],
-                                      ),
-                                      Stack(
-                                        alignment: Alignment.bottomRight,
-                                        children: [
-                                          Container(
-                                            width: sizeFromWidth(context, 2.5),
-                                            height: sizeFromHeight(context, 10,
-                                                hasAppBar: true),
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFF151515),
-                                              borderRadius: BorderRadius.only(
-                                                  bottomLeft:
-                                                      Radius.circular(20),
-                                                  bottomRight:
-                                                      Radius.circular(20)),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 7),
-                                            child: Center(
-                                              child: CircularPercentIndicator(
-                                                radius:
-                                                    sizeFromWidth(context, 15),
-                                                percent: double.parse(doc[index]
-                                                                ['score']
-                                                            .toString()) >=
-                                                        100
-                                                    ? 100.0
-                                                    : double.parse(doc[index]
-                                                            ['score']
-                                                        .toString()),
-                                                backgroundColor:
-                                                    const Color(0xFF202020),
-                                                progressColor:
-                                                    (competitionProvider
-                                                                    .greatScore ==
-                                                                doc[index]
-                                                                    ['score'] &&
-                                                            widget.end == true)
-                                                        ? Colors.amber
-                                                        : const Color(
-                                                            0xFF035cd2),
-                                                center: Text(
-                                                  double.parse(doc[index]
-                                                              ['score']
-                                                          .toString())
-                                                      .toString(),
-                                                  style: TextStyle(
-                                                    fontSize: sizeFromWidth(
-                                                        context, 35),
-                                                    color: white,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const Positioned(
-                                            bottom: 5,
-                                            right: 5,
-                                            child: Icon(Icons.restart_alt,
-                                                color: Color(0xFF9f9f9f)),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  back: Container(
-                                    margin: const EdgeInsets.only(
-                                        bottom: 10, left: 15, right: 15),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF151515),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(20),
-                                        topRight: Radius.circular(20),
-                                        bottomLeft: Radius.circular(20),
-                                        bottomRight: Radius.circular(20),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextButton(
+                                          style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty.all(
+                                                      const Color(0xFF39373a))),
+                                          onPressed: () async {
+                                            navigateAndFinish(
+                                              context,
+                                              Comments(
+                                                widget.competitionModel,
+                                                widget.endDate,
+                                                competitionProvider
+                                                    .competitors[index].id,
+                                                competitionProvider
+                                                    .competitors[index]
+                                                    .numberComments,
+                                                widget.isEnd,
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            'تعليق',
+                                            style: TextStyle(
+                                              color: white,
+                                              fontSize:
+                                                  sizeFromWidth(context, 30),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            width: sizeFromWidth(context, 1),
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFF39373a),
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(20),
-                                                topRight: Radius.circular(20),
-                                              ),
-                                            ),
-                                            child: IconButton(
-                                                onPressed: () {
-                                                  if (doc[index]['video']
-                                                      .toString()
-                                                      .contains('youtu')) {
-                                                    navigateTo(
-                                                        context,
-                                                        YoutubeVideo(doc[index]
-                                                            ['video'], doc[index].id));
-                                                  } else {
-                                                    navigateTo(
-                                                        context,
-                                                        ShowVideo(doc[index]
-                                                            ['video']));
-                                                  }
-                                                },
-                                                icon: Icon(Icons.play_circle,
-                                                    color: white)),
-                                          ),
-                                        ),
-                                        if (!widget.end)
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: TextButton(
-                                                  style: ButtonStyle(
-                                                      overlayColor:
-                                                          MaterialStateProperty
-                                                              .all(const Color(
-                                                                  0xFF39373a))),
-                                                  onPressed: () async {
-                                                    var data =
-                                                        await FirebaseFirestore
-                                                            .instance
-                                                            .collection(
-                                                                'competition')
-                                                            .doc(widget.docId)
-                                                            .collection('users')
-                                                            .doc(doc[index].id)
-                                                            .get();
-                                                    List users = data['users'];
-                                                    double score =
-                                                        data['score'];
-                                                    if (!users.contains(id)) {
-                                                      users.add(id);
-                                                      FirebaseFirestore.instance
-                                                          .collection(
-                                                              'competition')
-                                                          .doc(widget.docId)
-                                                          .collection('users')
-                                                          .doc(doc[index].id)
-                                                          .update({
-                                                        'users': users,
-                                                        'score': (score + 0.01),
-                                                      });
-                                                      Provider.of<CompetitionProvider>(
-                                                              context,
-                                                              listen: false)
-                                                          .getCompetitionNumber(
-                                                              widget.docId);
-                                                    } else {
-                                                      showToast(
-                                                          text:
-                                                              'تم التصويت لهذا المتسابق',
-                                                          state: ToastStates
-                                                              .WARNING);
-                                                    }
-                                                  },
-                                                  child: Text(
-                                                    'أضف تصويت',
-                                                    style: TextStyle(
-                                                      color: white,
-                                                      fontSize: sizeFromWidth(
-                                                          context, 30),
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextButton(
-                                                style: ButtonStyle(
-                                                    overlayColor:
-                                                        MaterialStateProperty
-                                                            .all(const Color(
-                                                                0xFF39373a))),
-                                                onPressed: () async {
-                                                  var comments =
-                                                      await FirebaseFirestore
-                                                          .instance
-                                                          .collection(
-                                                              'competition')
-                                                          .doc(widget.docId)
-                                                          .collection('users')
-                                                          .doc(doc[index].id)
-                                                          .collection(
-                                                              'comments')
-                                                          .get();
-                                                  navigateAndFinish(
-                                                    context,
-                                                    Comments(
-                                                      widget.docId,
-                                                      widget.date,
-                                                      doc[index].id,
-                                                      comments.docs.length,
-                                                      widget.end,
-                                                    ),
-                                                  );
-                                                },
-                                                child: Text(
-                                                  'تعليق',
-                                                  style: TextStyle(
-                                                    color: white,
-                                                    fontSize: sizeFromWidth(
-                                                        context, 30),
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: const [
-                                            SizedBox(width: 10),
-                                            Icon(Icons.restart_alt,
-                                                color: Color(0xFF9f9f9f)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                );
-                              },
-                              itemCount: doc.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 5,
-                                mainAxisSpacing: 5,
-                                childAspectRatio: 1 / 1.38,
+                                  Row(
+                                    children: const [
+                                      SizedBox(width: 10),
+                                      Icon(Icons.restart_alt,
+                                          color: Color(0xFF9f9f9f)),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            );
-                          }
+                            ),
+                          );
                         },
+                        itemCount: competitionProvider.competitors.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 5,
+                          mainAxisSpacing: 5,
+                          childAspectRatio: 1 / 1.35,
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -524,22 +481,22 @@ class _FansVoteState extends State<FansVote> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: CarouselSlider(
-                items: [
-                  Row(
+                items: downBanners.map((e) {
+                  return Row(
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
+                              image: NetworkImage(e.image),
                               fit: BoxFit.fitWidth,
                             ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                }).toList(),
                 options: CarouselOptions(
                   height: 250,
                   initialPage: 0,

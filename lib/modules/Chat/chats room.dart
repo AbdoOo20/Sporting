@@ -1,18 +1,20 @@
 // ignore_for_file: use_build_context_synchronously, must_be_immutable
 
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:news/modules/Chat/category%20chat.dart';
 import 'package:news/modules/Chat/chat.dart';
+import 'package:news/modules/Chat/create%20chat.dart';
+import 'package:news/modules/Chat/edit%20chat.dart';
 import 'package:provider/provider.dart';
+import '../../network/cash_helper.dart';
 import '../../providers/chat provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class ChatsRoom extends StatefulWidget {
-  String categoryChatNumber;
+  int categoryChatNumber;
 
   ChatsRoom(this.categoryChatNumber, {Key? key}) : super(key: key);
 
@@ -24,7 +26,16 @@ class _ChatsRoomState extends State<ChatsRoom> {
   late ChatProvider chatProvider;
 
   @override
+  void initState() {
+    Provider.of<ChatProvider>(context, listen: false)
+        .getChats(widget.categoryChatNumber);
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    String name = CacheHelper.getData(key: 'name');
+    var id = CacheHelper.getData(key: 'id');
     chatProvider = Provider.of(context);
     return Scaffold(
       appBar: AppBar(
@@ -51,7 +62,7 @@ class _ChatsRoomState extends State<ChatsRoom> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -64,139 +75,147 @@ class _ChatsRoomState extends State<ChatsRoom> {
             navigateAndFinish(context, const CategoryChat());
           },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle),
+            onPressed: () {
+              navigateAndFinish(context, CreateChat(widget.categoryChatNumber));
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
+          Container(
+            width: sizeFromWidth(context, 1),
+            height: sizeFromHeight(context, 11, hasAppBar: true),
+            color: primaryColor,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              child: textFormField(
+                controller: chatProvider.search,
+                type: TextInputType.text,
+                validate: (value) {
+                  return null;
+                },
+                onChange: (value) {
+                  if (chatProvider.search.text == '') {
+                    chatProvider.getChats(widget.categoryChatNumber);
+                  }
+                  chatProvider.searchAboutChat();
+                },
+                hint: 'ابحث هنا',
+                isExpanded: true,
+                textAlignVertical: TextAlignVertical.bottom,
+              ),
+            ),
+          ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chatRoom')
-                  .orderBy('time', descending: true)
-                  .snapshots(),
-              builder: (ctx, snapShot) {
-                if (snapShot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child:
-                          circularProgressIndicator(lightGrey, primaryColor));
-                }
-                final doc = snapShot.data?.docs;
-                var user = FirebaseAuth.instance.currentUser!.uid;
-                if (doc == null || doc.isEmpty) {
-                  return const Center();
-                } else {
-                  return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: doc.length,
-                    itemBuilder: (ctx, index) {
-                      List allUsers = doc[index]['users'];
-                      if (doc[index]['categoryNumber'] ==
-                          widget.categoryChatNumber) {
-                        return InkWell(
-                          onTap: () async {
-                            var usersInChat = await FirebaseFirestore.instance
-                                .collection('chatRoom')
-                                .doc(doc[index]['chatId'])
-                                .get();
-                            List allUsers = usersInChat['users'];
-                            int numbers = usersInChat['numbers'];
-                            if (allUsers.length == numbers) {
-                              showToast(
-                                  text: 'هذه الغرفة ممتلئة بالمستخدمين',
-                                  state: ToastStates.ERROR);
-                            } else {
-                              if (!allUsers.contains(user)) {
-                                allUsers.add(user);
-                              }
-                              FirebaseFirestore.instance
-                                  .collection('chatRoom')
-                                  .doc(doc[index]['chatId'])
-                                  .update({
-                                'users': allUsers,
-                              });
-                              var currentUser = await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(user)
-                                  .get();
-                              chatProvider.sendMessage(
-                                context,
-                                doc[index]['name'],
-                                doc[index]['chatId'],
-                                '${currentUser['userName']} \n قام بالدخول للدردشة',
-                              );
-                              navigateAndFinish(
-                                  context,
-                                  Chat(doc[index]['name'], doc[index]['chatId'],
-                                      widget.categoryChatNumber));
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            margin: const EdgeInsets.all(5),
-                            width: sizeFromWidth(context, 1),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: const Color(0xFF7f0e14),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        doc[index]['name'],
-                                        textDirection: TextDirection.rtl,
-                                        style: TextStyle(
-                                          fontSize: sizeFromWidth(context, 30),
-                                          fontWeight: FontWeight.bold,
-                                          color: white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'مستخدمين الغرفة: ${doc[index]['numbers']}',
-                                        textDirection: TextDirection.rtl,
-                                        style: TextStyle(
-                                          fontSize: sizeFromWidth(context, 30),
-                                          fontWeight: FontWeight.bold,
-                                          color: white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'الموجودون حاليا: ${allUsers.length.toString()}',
-                                        textDirection: TextDirection.rtl,
-                                        style: TextStyle(
-                                          fontSize: sizeFromWidth(context, 30),
-                                          fontWeight: FontWeight.bold,
-                                          color: white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+            child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: chatProvider.chats.length,
+              itemBuilder: (ctx, index) {
+                return InkWell(
+                  onTap: () async {
+                    chatProvider.checkIsUserBlocked(
+                        chatProvider.chats[index].id.toString(), id.toString());
+                    if (chatProvider.chats[index].users ==
+                        chatProvider.chats[index].usersInChat) {
+                      showToast(
+                          text: 'هذه الغرفة ممتلئة بالمستخدمين',
+                          state: ToastStates.ERROR);
+                    } else if (chatProvider.userBlocked) {
+                      showToast(
+                          text: 'أنت محظور فى هذه المحادثة',
+                          state: ToastStates.ERROR);
+                      chatProvider.userBlocked = false;
+                    } else {
+                      chatProvider.userEnterChat(chatProvider.chats[index].id);
+                      chatProvider.sendMessage(
+                          chatProvider.chats[index].id.toString(),
+                          '$name\nدخل الدردشة',
+                          'message');
+                      navigateAndFinish(
+                        context,
+                        Chat(
+                          chatProvider.chats[index].name,
+                          chatProvider.chats[index].id,
+                          widget.categoryChatNumber,
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    margin: const EdgeInsets.all(5),
+                    width: sizeFromWidth(context, 1),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF7f0e14),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (chatProvider.chats[index].chatAdmin ==
+                            id.toString())
+                          IconButton(
+                            onPressed: () {
+                              navigateAndFinish(context, EditChat(widget.categoryChatNumber, chatProvider.chats[index]));
+                            },
+                            icon: Icon(Icons.edit, color: white),
+                          ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                chatProvider.chats[index].name,
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  fontSize: sizeFromWidth(context, 30),
+                                  fontWeight: FontWeight.bold,
+                                  color: white,
                                 ),
-                                const SizedBox(width: 5),
-                                Container(
-                                  width: sizeFromWidth(context, 7),
-                                  height: sizeFromHeight(context, 12,
-                                      hasAppBar: true),
-                                  decoration: BoxDecoration(
-                                    color: white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    image: DecorationImage(
-                                      image: NetworkImage(doc[index]['image']),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                              ),
+                              Text(
+                                'مستخدمين الغرفة: ${chatProvider.chats[index].users}',
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  fontSize: sizeFromWidth(context, 30),
+                                  fontWeight: FontWeight.bold,
+                                  color: white,
                                 ),
-                              ],
+                              ),
+                              Text(
+                                'الموجودون حاليا: ${chatProvider.chats[index].usersInChat}',
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  fontSize: sizeFromWidth(context, 30),
+                                  fontWeight: FontWeight.bold,
+                                  color: white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          width: sizeFromWidth(context, 6),
+                          height: sizeFromWidth(context, 6),
+                          decoration: BoxDecoration(
+                            color: white,
+                            borderRadius: BorderRadius.circular(10),
+                            image: DecorationImage(
+                              image:
+                                  NetworkImage(chatProvider.chats[index].image),
+                              fit: BoxFit.cover,
                             ),
                           ),
-                        );
-                      }
-                      return const SizedBox();
-                    },
-                  );
-                }
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
           ),
@@ -207,22 +226,22 @@ class _ChatsRoomState extends State<ChatsRoom> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: CarouselSlider(
-                items: [
-                  Row(
+                items: downBanners.map((e) {
+                  return Row(
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
+                              image: NetworkImage(e.image),
                               fit: BoxFit.fitWidth,
                             ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                }).toList(),
                 options: CarouselOptions(
                   height: 250,
                   initialPage: 0,

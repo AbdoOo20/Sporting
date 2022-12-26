@@ -5,6 +5,7 @@ import 'package:news/modules/IntellectualProperty/IntellectualProperty.dart';
 import 'package:news/modules/home/home.dart';
 import 'package:news/modules/membership/membership.dart';
 import 'package:news/modules/policies/policies.dart';
+import 'package:news/modules/programmer/programmer.dart';
 import 'package:news/providers/user%20provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -110,7 +111,7 @@ class _DrawerSideState extends State<DrawerSide> {
                         backgroundColor: const Color(0xFFd1ad17),
                         radius: sizeFromWidth(context, 11),
                         backgroundImage:
-                            const AssetImage("assets/images/icon.jpeg"),
+                            const AssetImage("assets/images/logo 2.jpeg"),
                       ),
                     ),
                     const Spacer(),
@@ -130,14 +131,13 @@ class _DrawerSideState extends State<DrawerSide> {
                 'الملف الشخصى',
                 Icons.person_outline,
                 () {
-                  String email = CacheHelper.getData(key: 'email') ?? '';
-                  if (email == '') {
+                  String token = CacheHelper.getData(key: 'token') ?? '';
+                  if (token == '') {
                     navigateAndFinish(context, const SignUP());
                   } else {
-                    var currentUser = FirebaseAuth.instance.currentUser!.uid;
                     Provider.of<UserProvider>(context, listen: false)
-                        .getUserData(currentUser);
-                    navigateAndFinish(context, Profile(currentUser, 'home'));
+                        .getDataUser(context, token);
+                    navigateAndFinish(context, Profile(token, 'home', false, false, ''));
                   }
                 },
               ),
@@ -149,42 +149,42 @@ class _DrawerSideState extends State<DrawerSide> {
                   navigateAndFinish(context, const Members());
                 },
               ),
-              Directionality(
-                textDirection: TextDirection.rtl,
-                child: ListTile(
-                  trailing: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.amber,
-                    ),
-                    child: Text(
-                      userProvider.numberOfNotifications.toString(),
-                      style: TextStyle(
-                        color: white,
-                        fontSize: sizeFromWidth(context, 25),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    'التنبيهات',
-                    style: TextStyle(
-                      color: white,
-                      fontSize: sizeFromWidth(context, 25),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onTap: () {
-                    String email = CacheHelper.getData(key: 'email') ?? '';
-                    if (email == '') {
-                      showAlertDialog(context);
-                    } else {
-                      navigateAndFinish(context, const Notifications());
-                    }
-                  },
-                ),
-              ),
+              // Directionality(
+              //   textDirection: TextDirection.rtl,
+              //   child: ListTile(
+              //     trailing: Container(
+              //       padding: const EdgeInsets.all(5),
+              //       decoration: const BoxDecoration(
+              //         shape: BoxShape.circle,
+              //         color: Colors.amber,
+              //       ),
+              //       child: Text(
+              //         userProvider.numberOfNotifications.toString(),
+              //         style: TextStyle(
+              //           color: white,
+              //           fontSize: sizeFromWidth(context, 25),
+              //           fontWeight: FontWeight.bold,
+              //         ),
+              //       ),
+              //     ),
+              //     title: Text(
+              //       'التنبيهات',
+              //       style: TextStyle(
+              //         color: white,
+              //         fontSize: sizeFromWidth(context, 25),
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     ),
+              //     onTap: () {
+              //       String email = CacheHelper.getData(key: 'email') ?? '';
+              //       if (email == '') {
+              //         showAlertDialog(context);
+              //       } else {
+              //         navigateAndFinish(context, const Notifications());
+              //       }
+              //     },
+              //   ),
+              // ),
               buildListTile(
                 context,
                 'الرؤية والرسالة والأهداف',
@@ -227,10 +227,19 @@ class _DrawerSideState extends State<DrawerSide> {
               ),
               buildListTile(
                 context,
+                'مبرمج التطبيق',
+                Icons.code,
+                    () async {
+                  navigateAndFinish(context, const Programmer());
+                },
+              ),
+              buildListTile(
+                context,
                 'تواصل معنا',
                 Icons.call,
                 () async {
-                  await launchUrl(url, mode: LaunchMode.externalNonBrowserApplication);
+                  await launchUrl(url,
+                      mode: LaunchMode.externalNonBrowserApplication);
                 },
               ),
               buildListTile(
@@ -238,9 +247,13 @@ class _DrawerSideState extends State<DrawerSide> {
                 'تسجيل الخروج',
                 Icons.logout,
                 () {
-                  FirebaseAuth.instance.signOut();
-                  CacheHelper.saveData(key: 'email', value: '');
-                  navigateAndFinish(context, const Home());
+                  String token = CacheHelper.getData(key: 'token') ?? '';
+                  if (token == '') {
+                    showToast(
+                        text: 'لا يوجد حساب مسجل', state: ToastStates.WARNING);
+                  } else {
+                    userProvider.userLogout(context);
+                  }
                 },
               ),
             ],

@@ -1,15 +1,13 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, import_of_legacy_library_into_null_safe
 
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:news/providers/user%20provider.dart';
+import 'package:news/providers/other%20provider.dart';
 import 'package:news/shared/Components.dart';
 import 'package:news/shared/Style.dart';
 import 'package:provider/provider.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
-
+import '../../providers/articles provider.dart';
 import '../home/home.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,16 +18,14 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Future<void> setIP() async {
-    final deviceInfoPlugin = DeviceInfoPlugin();
-    final deviceInfo = await deviceInfoPlugin.deviceInfo;
-    final allInfo = deviceInfo.data;
-    Provider.of<UserProvider>(context, listen: false).setIpAddress(allInfo['id']);
-  }
 
   @override
   void initState() {
-    setIP();
+    Provider.of<ArticlesProvider>(context, listen: false).getPlayers();
+    Provider.of<ArticlesProvider>(context, listen: false).getOtherPlayers(true);
+    Provider.of<ArticlesProvider>(context, listen: false).getArticles();
+    Provider.of<ArticlesProvider>(context, listen: false).getOtherArticles(true);
+    Provider.of<OtherProvider>(context, listen: false).getBanners();
     Timer(
       const Duration(seconds: 4),
       () {

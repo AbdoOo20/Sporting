@@ -5,11 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
-import 'package:news/models/matches%20scores.dart';
-import 'package:news/models/team.dart';
 import 'package:news/shared/Style.dart';
-
-import '../models/matches statistics.dart';
+import '../models/statistics/matches scores.dart';
+import '../models/statistics/matches statistics.dart';
+import '../models/statistics/team.dart';
 
 class MatchesStatisticsProvider with ChangeNotifier {
   List<MatchesStatisticsModel> matches = [];
@@ -20,7 +19,7 @@ class MatchesStatisticsProvider with ChangeNotifier {
 
   Future<void> getMatches(String date) async {
     matches = [];
-    String url = "https://api.ifmis-2030.icu/TMA/index.php?data=$date&timezone=+03";
+    String url = "https://api.iffsma-2030.com/TMA/index.php?data=$date&timezone=+03";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -107,7 +106,7 @@ class MatchesStatisticsProvider with ChangeNotifier {
 
   Future<void> getScores(String champion) async {
     scores = [];
-    String url = "https://api.ifmis-2030.icu/jdwel/$champion-scorers";
+    String url = "https://api.iffsma-2030.com/jdwel/$champion-scorers";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -126,7 +125,7 @@ class MatchesStatisticsProvider with ChangeNotifier {
 
   Future<void> getTeams(String champion) async {
     teams = [];
-    String url = "https://api.ifmis-2030.icu/jdwel/$champion";
+    String url = "https://api.iffsma-2030.com/jdwel/$champion";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);

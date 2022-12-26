@@ -1,12 +1,15 @@
+
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:news/models/user%20model.dart';
 import 'package:news/modules/Authentication/log%20in.dart';
 import 'package:news/providers/user%20provider.dart';
 import 'package:news/shared/Components.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/authenticate/register model.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import '../home/home.dart';
 
 class SignUP extends StatefulWidget {
@@ -54,7 +57,7 @@ class _SignUPState extends State<SignUP> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -156,23 +159,15 @@ class _SignUPState extends State<SignUP> {
                         FontWeight.bold,
                         () {
                           if (formKey.currentState!.validate()) {
-                            UserModel userModel = UserModel(
+                            RegisterModel userModel = RegisterModel(
                               userName: userName.text.trim(),
                               email: email.text.trim(),
                               password: password.text.trim(),
                               phone: phone.text.trim(),
                               country: country.text.trim(),
-                              kind: kind.text.trim(),
-                              image: '',
-                              about: '',
-                              id: '',
-                              facebook: '',
-                              instagram: '',
-                              tiktok: '',
-                              twitter: '',
-                              snapchat: '',
+                              type: kind.text.trim(),
                             );
-                            userProvider.createUser(context, userModel);
+                            userProvider.userRegister(context,userModel);
                           }
                         },
                       ),
@@ -208,23 +203,22 @@ class _SignUPState extends State<SignUP> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: CarouselSlider(
-                items: [
-                  Row(
+                items: downBanners.map((e) {
+                  return Row(
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             image: DecorationImage(
-                              image:
-                              AssetImage('assets/images/banner2.png'),
+                              image: NetworkImage(e.image),
                               fit: BoxFit.fitWidth,
                             ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                }).toList(),
                 options: CarouselOptions(
                   height: 250,
                   initialPage: 0,

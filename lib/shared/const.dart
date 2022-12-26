@@ -1,3 +1,9 @@
+import 'package:news/models/authenticate/user%20model.dart';
+
+import '../models/other/banner model.dart';
+import '../models/statistics/articles.dart';
+import '../models/statistics/player.dart';
+
 List arabic = [
   'ظ',
   'ز',
@@ -40,3 +46,11 @@ List arabic = [
   'د',
   'ذ',
 ];
+
+List<ArticlesModel> articles = [];
+List<ArticlesModel> otherArticles = [];
+List<PlayerModel> players = [];
+List<PlayerModel> otherPlayers = [];
+List<BannerModel> upBanners = [];
+List<BannerModel> downBanners = [];
+late UserModel userModel;

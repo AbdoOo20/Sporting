@@ -1,9 +1,11 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:news/providers/chat%20provider.dart';
 
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import '../home/home.dart';
 import 'chats room.dart';
 
@@ -15,8 +17,17 @@ class CategoryChat extends StatefulWidget {
 }
 
 class _CategoryChatState extends State<CategoryChat> {
+  late ChatProvider chatProvider;
+
+  @override
+  void initState() {
+    Provider.of<ChatProvider>(context, listen: false).getCategoryChats();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    chatProvider = Provider.of(context);
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: white),
@@ -42,7 +53,7 @@ class _CategoryChatState extends State<CategoryChat> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -59,113 +70,96 @@ class _CategoryChatState extends State<CategoryChat> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('categoryChat')
-                  .orderBy('number', descending: false)
-                  .snapshots(),
-              builder: (ctx, snapShot) {
-                if (snapShot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child:
-                      circularProgressIndicator(lightGrey, primaryColor));
-                }
-                final doc = snapShot.data?.docs;
-                if (doc == null || doc.isEmpty) {
-                  return const Center();
-                } else {
-                  return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: doc.length,
-                    itemBuilder: (ctx, index) {
-                      return InkWell(
-                        onTap: () async {
-                          navigateAndFinish(context, ChatsRoom(doc[index]['number'].toString()));
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          margin: const EdgeInsets.all(5),
-                          width: sizeFromWidth(context, 1),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: const Color(0xFF7f0e14),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  doc[index]['name'],
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontSize: sizeFromWidth(context, 30),
-                                    fontWeight: FontWeight.bold,
-                                    color: white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Container(
-                                width: sizeFromWidth(context, 7),
-                                height: sizeFromHeight(context, 12,
-                                    hasAppBar: true),
-                                decoration: BoxDecoration(
-                                  color: white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  image: DecorationImage(
-                                    image: NetworkImage(doc[index]['image']),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }
-              },
-            ),
-          ),
-          Container(
-            color: primaryColor,
-            height: sizeFromHeight(context, 10),
-            width: sizeFromWidth(context, 1),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: CarouselSlider(
-                items: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
-                              fit: BoxFit.fitWidth,
+            child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: chatProvider.categoryChat.length,
+              itemBuilder: (ctx, index) {
+                return InkWell(
+                  onTap: () async {
+                    navigateAndFinish(context,
+                        ChatsRoom(chatProvider.categoryChat[index].id));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    margin: const EdgeInsets.all(5),
+                    width: sizeFromWidth(context, 1),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF7f0e14),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            chatProvider.categoryChat[index].name,
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                              fontSize: sizeFromWidth(context, 30),
+                              fontWeight: FontWeight.bold,
+                              color: white,
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 5),
+                        Container(
+                          width: sizeFromWidth(context, 7),
+                          height: sizeFromWidth(context, 7),
+                          decoration: BoxDecoration(
+                            color: white,
+                            borderRadius: BorderRadius.circular(10),
+                            image: DecorationImage(
+                              image: NetworkImage(chatProvider.categoryChat[index].image),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-                options: CarouselOptions(
-                  height: 250,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  reverse: false,
-                  autoPlay: true,
-                  viewportFraction: 1,
-                  autoPlayInterval: const Duration(seconds: 3),
-                  autoPlayAnimationDuration: const Duration(seconds: 1),
-                  autoPlayCurve: Curves.fastOutSlowIn,
-                  scrollDirection: Axis.horizontal,
-                ),
-              ),
+                );
+              },
             ),
           ),
+          
+          Container(
+                  color: primaryColor,
+                  height: sizeFromHeight(context, 10),
+                  width: sizeFromWidth(context, 1),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: CarouselSlider(
+                      items: downBanners.map((e) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(e.image),
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                      options: CarouselOptions(
+                        height: 250,
+                        initialPage: 0,
+                        enableInfiniteScroll: true,
+                        reverse: false,
+                        autoPlay: true,
+                        viewportFraction: 1,
+                        autoPlayInterval: const Duration(seconds: 3),
+                        autoPlayAnimationDuration: const Duration(seconds: 1),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        scrollDirection: Axis.horizontal,
+                      ),
+                    ),
+                  ),
+                ),
         ],
       ),
     );

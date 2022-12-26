@@ -5,7 +5,7 @@ import 'package:news/modules/play_store/play%20store.dart';
 import 'package:news/providers/store%20provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import '../../shared/const.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -57,7 +57,7 @@ class _ShowStoreState extends State<ShowStore> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -119,43 +119,43 @@ class _ShowStoreState extends State<ShowStore> {
             ),
           ),
           Container(
-            color: primaryColor,
-            height: sizeFromHeight(context, 10),
-            width: sizeFromWidth(context, 1),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: CarouselSlider(
-                items: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
-                              fit: BoxFit.fitWidth,
+                  color: primaryColor,
+                  height: sizeFromHeight(context, 10),
+                  width: sizeFromWidth(context, 1),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: CarouselSlider(
+                      items: downBanners.map((e) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(e.image),
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          ],
+                        );
+                      }).toList(),
+                      options: CarouselOptions(
+                        height: 250,
+                        initialPage: 0,
+                        enableInfiniteScroll: true,
+                        reverse: false,
+                        autoPlay: true,
+                        viewportFraction: 1,
+                        autoPlayInterval: const Duration(seconds: 3),
+                        autoPlayAnimationDuration: const Duration(seconds: 1),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        scrollDirection: Axis.horizontal,
                       ),
-                    ],
+                    ),
                   ),
-                ],
-                options: CarouselOptions(
-                  height: 250,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  reverse: false,
-                  autoPlay: true,
-                  viewportFraction: 1,
-                  autoPlayInterval: const Duration(seconds: 3),
-                  autoPlayAnimationDuration: const Duration(seconds: 1),
-                  autoPlayCurve: Curves.fastOutSlowIn,
-                  scrollDirection: Axis.horizontal,
                 ),
-              ),
-            ),
-          ),
         ],
       ),
     );

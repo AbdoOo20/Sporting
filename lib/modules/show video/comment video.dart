@@ -7,6 +7,7 @@ import 'package:news/shared/Components.dart';
 import 'package:provider/provider.dart';
 
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class CommentVideo extends StatefulWidget {
   String title;
@@ -41,7 +42,7 @@ class _CommentVideoState extends State<CommentVideo> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -117,22 +118,22 @@ class _CommentVideoState extends State<CommentVideo> {
               child: Directionality(
                 textDirection: TextDirection.rtl,
                 child: CarouselSlider(
-                  items: [
-                    Row(
+                  items: downBanners.map((e) {
+                    return Row(
                       children: [
                         Expanded(
                           child: Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/images/banner2.png'),
+                                image: NetworkImage(e.image),
                                 fit: BoxFit.fitWidth,
                               ),
                             ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  }).toList(),
                   options: CarouselOptions(
                     height: 250,
                     initialPage: 0,

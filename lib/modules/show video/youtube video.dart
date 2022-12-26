@@ -15,6 +15,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../network/cash_helper.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import '../Authentication/log in.dart';
 import '../Authentication/sign up.dart';
 
@@ -118,7 +119,7 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
                       color: Color(0xFFbdbdbd),
                       shape: BoxShape.circle,
                       image: DecorationImage(
-                        image: AssetImage('assets/images/icon.jpeg'),
+                        image: AssetImage('assets/images/logo 2.jpeg'),
                       ),
                     ),
                   ),
@@ -151,7 +152,6 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
                         .snapshots(),
                     builder: (ctx, snapShot) {
                       final doc = snapShot.data?.docs;
-                      var currentUser = FirebaseAuth.instance.currentUser!.uid;
                       if (doc == null || doc.isEmpty) {
                         return const Center();
                       } else {
@@ -228,7 +228,7 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
                                                 borderRadius: BorderRadius.circular(10),
                                               ),
                                               child: textWidget(
-                                                'تعليق',
+                                                'التعليقات',
                                                 null,
                                                 null,
                                                 white,
@@ -240,157 +240,144 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
                                         ),
                                       ],
                                     ),
-                                  if (!chatProvider.youtubePlayerController.value.isFullScreen)
-                                    Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 5),
-                                      padding: const EdgeInsets.all(5),
-                                      child: textWidget(
-                                        ':التعليقات',
-                                        null,
-                                        null,
-                                        primaryColor,
-                                        sizeFromWidth(context, 20),
-                                        FontWeight.bold,
-                                      ),
-                                    ),
-                                  if (doc[index]['title'] == widget.title)
-                                    Container(
-                                      padding: const EdgeInsets.all(5),
-                                      margin: const EdgeInsets.all(5),
-                                      width: sizeFromWidth(context, 1),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: const Color(0xFF7f0e14),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          if (currentUser == doc[index]['id'])
-                                            IconButton(
-                                                onPressed: () {
-                                                  otherProvider
-                                                      .deleteComment(doc[index].id);
-                                                },
-                                                icon:
-                                                Icon(Icons.delete, color: white)),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                              children: [
-                                                Text(
-                                                  doc[index]['name'],
-                                                  textDirection: TextDirection.rtl,
-                                                  style: TextStyle(
-                                                    fontSize:
-                                                    sizeFromWidth(context, 25),
-                                                    fontWeight: FontWeight.bold,
-                                                    color: white,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  doc[index]['comment'],
-                                                  textDirection: TextDirection.rtl,
-                                                  style: TextStyle(
-                                                    fontSize:
-                                                    sizeFromWidth(context, 30),
-                                                    fontWeight: FontWeight.bold,
-                                                    color: white,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 5),
-                                          if (doc[index]['image'] != '')
-                                            Container(
-                                              width: sizeFromWidth(context, 7),
-                                              height: sizeFromHeight(context, 12,
-                                                  hasAppBar: true),
-                                              decoration: BoxDecoration(
-                                                color: white,
-                                                borderRadius:
-                                                BorderRadius.circular(10),
-                                                image: DecorationImage(
-                                                    image: NetworkImage(
-                                                        doc[index]['image']),
-                                                    fit: BoxFit.cover),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
+                                  // if (doc[index]['title'] == widget.title)
+                                  //   Container(
+                                  //     padding: const EdgeInsets.all(5),
+                                  //     margin: const EdgeInsets.all(5),
+                                  //     width: sizeFromWidth(context, 1),
+                                  //     decoration: BoxDecoration(
+                                  //       borderRadius: BorderRadius.circular(10),
+                                  //       color: const Color(0xFF7f0e14),
+                                  //     ),
+                                  //     child: Row(
+                                  //       mainAxisAlignment: MainAxisAlignment.end,
+                                  //       children: [
+                                  //         if (currentUser == doc[index]['id'])
+                                  //           IconButton(
+                                  //               onPressed: () {
+                                  //                 otherProvider
+                                  //                     .deleteComment(doc[index].id);
+                                  //               },
+                                  //               icon:
+                                  //               Icon(Icons.delete, color: white)),
+                                  //         Expanded(
+                                  //           child: Column(
+                                  //             crossAxisAlignment:
+                                  //             CrossAxisAlignment.end,
+                                  //             children: [
+                                  //               Text(
+                                  //                 doc[index]['name'],
+                                  //                 textDirection: TextDirection.rtl,
+                                  //                 style: TextStyle(
+                                  //                   fontSize:
+                                  //                   sizeFromWidth(context, 25),
+                                  //                   fontWeight: FontWeight.bold,
+                                  //                   color: white,
+                                  //                 ),
+                                  //               ),
+                                  //               Text(
+                                  //                 doc[index]['comment'],
+                                  //                 textDirection: TextDirection.rtl,
+                                  //                 style: TextStyle(
+                                  //                   fontSize:
+                                  //                   sizeFromWidth(context, 30),
+                                  //                   fontWeight: FontWeight.bold,
+                                  //                   color: white,
+                                  //                 ),
+                                  //               ),
+                                  //             ],
+                                  //           ),
+                                  //         ),
+                                  //         const SizedBox(width: 5),
+                                  //         if (doc[index]['image'] != '')
+                                  //           Container(
+                                  //             width: sizeFromWidth(context, 7),
+                                  //             height: sizeFromHeight(context, 12,
+                                  //                 hasAppBar: true),
+                                  //             decoration: BoxDecoration(
+                                  //               color: white,
+                                  //               borderRadius:
+                                  //               BorderRadius.circular(10),
+                                  //               image: DecorationImage(
+                                  //                   image: NetworkImage(
+                                  //                       doc[index]['image']),
+                                  //                   fit: BoxFit.cover),
+                                  //             ),
+                                  //           ),
+                                  //       ],
+                                  //     ),
+                                  //   ),
                                 ],
                               );
                             }
-                            if (doc[index]['title'] == widget.title) {
-                              return Container(
-                                padding: const EdgeInsets.all(5),
-                                margin: const EdgeInsets.all(5),
-                                width: sizeFromWidth(context, 1),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: const Color(0xFF7f0e14),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (currentUser == doc[index]['id'])
-                                      IconButton(
-                                          onPressed: () {
-                                            otherProvider
-                                                .deleteComment(doc[index].id);
-                                          },
-                                          icon:
-                                              Icon(Icons.delete, color: white)),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            doc[index]['name'],
-                                            textDirection: TextDirection.rtl,
-                                            style: TextStyle(
-                                              fontSize:
-                                                  sizeFromWidth(context, 25),
-                                              fontWeight: FontWeight.bold,
-                                              color: white,
-                                            ),
-                                          ),
-                                          Text(
-                                            doc[index]['comment'],
-                                            textDirection: TextDirection.rtl,
-                                            style: TextStyle(
-                                              fontSize:
-                                                  sizeFromWidth(context, 30),
-                                              fontWeight: FontWeight.bold,
-                                              color: white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    if (doc[index]['image'] != '')
-                                      Container(
-                                        width: sizeFromWidth(context, 7),
-                                        height: sizeFromHeight(context, 12,
-                                            hasAppBar: true),
-                                        decoration: BoxDecoration(
-                                          color: white,
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          image: DecorationImage(
-                                              image: NetworkImage(
-                                                  doc[index]['image']),
-                                              fit: BoxFit.cover),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            }
+                            // if (doc[index]['title'] == widget.title) {
+                            //   return Container(
+                            //     padding: const EdgeInsets.all(5),
+                            //     margin: const EdgeInsets.all(5),
+                            //     width: sizeFromWidth(context, 1),
+                            //     decoration: BoxDecoration(
+                            //       borderRadius: BorderRadius.circular(10),
+                            //       color: const Color(0xFF7f0e14),
+                            //     ),
+                            //     child: Row(
+                            //       mainAxisAlignment: MainAxisAlignment.end,
+                            //       children: [
+                            //         if (currentUser == doc[index]['id'])
+                            //           IconButton(
+                            //               onPressed: () {
+                            //                 otherProvider
+                            //                     .deleteComment(doc[index].id);
+                            //               },
+                            //               icon:
+                            //                   Icon(Icons.delete, color: white)),
+                            //         Expanded(
+                            //           child: Column(
+                            //             crossAxisAlignment:
+                            //                 CrossAxisAlignment.end,
+                            //             children: [
+                            //               Text(
+                            //                 doc[index]['name'],
+                            //                 textDirection: TextDirection.rtl,
+                            //                 style: TextStyle(
+                            //                   fontSize:
+                            //                       sizeFromWidth(context, 25),
+                            //                   fontWeight: FontWeight.bold,
+                            //                   color: white,
+                            //                 ),
+                            //               ),
+                            //               Text(
+                            //                 doc[index]['comment'],
+                            //                 textDirection: TextDirection.rtl,
+                            //                 style: TextStyle(
+                            //                   fontSize:
+                            //                       sizeFromWidth(context, 30),
+                            //                   fontWeight: FontWeight.bold,
+                            //                   color: white,
+                            //                 ),
+                            //               ),
+                            //             ],
+                            //           ),
+                            //         ),
+                            //         const SizedBox(width: 5),
+                            //         if (doc[index]['image'] != '')
+                            //           Container(
+                            //             width: sizeFromWidth(context, 7),
+                            //             height: sizeFromHeight(context, 12,
+                            //                 hasAppBar: true),
+                            //             decoration: BoxDecoration(
+                            //               color: white,
+                            //               borderRadius:
+                            //                   BorderRadius.circular(10),
+                            //               image: DecorationImage(
+                            //                   image: NetworkImage(
+                            //                       doc[index]['image']),
+                            //                   fit: BoxFit.cover),
+                            //             ),
+                            //           ),
+                            //       ],
+                            //     ),
+                            //   );
+                            // }
                             return const SizedBox();
                           },
                         );
@@ -406,23 +393,22 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: CarouselSlider(
-                      items: [
-                        Row(
+                      items: downBanners.map((e) {
+                        return Row(
                           children: [
                             Expanded(
                               child: Container(
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image:
-                                        AssetImage('assets/images/banner2.png'),
+                                    image: NetworkImage(e.image),
                                     fit: BoxFit.fitWidth,
                                   ),
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                      ],
+                        );
+                      }).toList(),
                       options: CarouselOptions(
                         height: 250,
                         initialPage: 0,

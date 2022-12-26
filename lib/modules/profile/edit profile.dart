@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:news/modules/profile/profile.dart';
 import 'package:provider/provider.dart';
-
-import '../../models/user model.dart';
 import '../../providers/user provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class EditProfile extends StatefulWidget {
-  String id;
-  EditProfile(this.id, {Key? key}) : super(key: key);
+  String token;
+  String chatID;
+  bool isChatAdmin;
+  bool isUserBlocked;
+
+  EditProfile(this.token, this.isChatAdmin, this.isUserBlocked, this.chatID,{Key? key}) : super(key: key);
 
   @override
   State<EditProfile> createState() => _EditProfileState();
@@ -34,17 +37,16 @@ class _EditProfileState extends State<EditProfile> {
 
   @override
   void initState() {
-    UserProvider userProvider = Provider.of(context, listen: false);
-    userName.text = userProvider.userModel!.userName;
-    phone.text = userProvider.userModel!.phone;
-    country.text = userProvider.userModel!.country;
-    kind.text = userProvider.userModel!.kind;
-    about.text = userProvider.userModel!.about;
-    facebook.text = userProvider.userModel!.facebook;
-    instagram.text = userProvider.userModel!.instagram;
-    twitter.text = userProvider.userModel!.twitter;
-    tiktok.text = userProvider.userModel!.tiktok;
-    snapchat.text = userProvider.userModel!.snapchat;
+    userName.text = userModel.name;
+    phone.text = userModel.phone;
+    country.text = userModel.country;
+    kind.text = userModel.type;
+    about.text = userModel.bio;
+    facebook.text = userModel.facebook;
+    instagram.text = userModel.instagram;
+    twitter.text = userModel.twitter;
+    tiktok.text = userModel.tiktok;
+    snapchat.text = userModel.snapchat;
     super.initState();
   }
 
@@ -76,7 +78,7 @@ class _EditProfileState extends State<EditProfile> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
@@ -86,7 +88,7 @@ class _EditProfileState extends State<EditProfile> {
         leading: IconButton(
           icon: const Icon(Icons.person),
           onPressed: () {
-            navigateAndFinish(context, Profile(widget.id, 'edit'));
+            navigateAndFinish(context, Profile(widget.token, 'edit', widget.isChatAdmin, widget.isUserBlocked, widget.chatID));
           },
         ),
       ),
@@ -109,12 +111,10 @@ class _EditProfileState extends State<EditProfile> {
                         return null;
                       },
                       hint: 'أدخل اسم المستخدم',
-                      onChange: (value) {
-                        userName.text = value!;
-                      }),
+                  ),
                   textFormField(
                     controller: phone,
-                    type: TextInputType.text,
+                    type: TextInputType.number,
                     validate: (value) {
                       if (value!.isEmpty) {
                         return 'رقم الهاتف قصير';
@@ -206,23 +206,20 @@ class _EditProfileState extends State<EditProfile> {
                         FontWeight.bold,
                         () {
                           if (formKey.currentState!.validate()) {
-                            UserModel userModel = UserModel(
-                              userName: userName.text.trim(),
-                              email: userProvider.userModel!.email,
-                              password: userProvider.userModel!.password,
-                              phone: phone.text.trim(),
-                              country: country.text.trim(),
-                              kind: kind.text.trim(),
-                              image: userProvider.userModel!.image,
-                              about: about.text.trim(),
-                              id: userProvider.userModel!.id,
-                              facebook: facebook.text.trim(),
-                              instagram: instagram.text.trim(),
-                              tiktok: tiktok.text.trim(),
-                              twitter: twitter.text.trim(),
-                              snapchat: snapchat.text.trim(),
+                            userProvider.updateUserData(
+                              context,
+                              widget.token,
+                              userName.text.trim(),
+                              phone.text.trim(),
+                              kind.text.trim(),
+                              country.text.trim(),
+                              about.text.trim(),
+                              facebook.text.trim(),
+                              instagram.text.trim(),
+                              twitter.text.trim(),
+                              snapchat.text.trim(),
+                              tiktok.text.trim(),
                             );
-                            userProvider.editUserData(userModel);
                           }
                         },
                       ),
@@ -236,43 +233,43 @@ class _EditProfileState extends State<EditProfile> {
             ),
           ),
           Container(
-            color: primaryColor,
-            height: sizeFromHeight(context, 10),
-            width: sizeFromWidth(context, 1),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: CarouselSlider(
-                items: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage('assets/images/banner2.png'),
-                              fit: BoxFit.fitWidth,
+                  color: primaryColor,
+                  height: sizeFromHeight(context, 10),
+                  width: sizeFromWidth(context, 1),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: CarouselSlider(
+                      items: downBanners.map((e) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(e.image),
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          ],
+                        );
+                      }).toList(),
+                      options: CarouselOptions(
+                        height: 250,
+                        initialPage: 0,
+                        enableInfiniteScroll: true,
+                        reverse: false,
+                        autoPlay: true,
+                        viewportFraction: 1,
+                        autoPlayInterval: const Duration(seconds: 3),
+                        autoPlayAnimationDuration: const Duration(seconds: 1),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        scrollDirection: Axis.horizontal,
                       ),
-                    ],
+                    ),
                   ),
-                ],
-                options: CarouselOptions(
-                  height: 250,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  reverse: false,
-                  autoPlay: true,
-                  viewportFraction: 1,
-                  autoPlayInterval: const Duration(seconds: 3),
-                  autoPlayAnimationDuration: const Duration(seconds: 1),
-                  autoPlayCurve: Curves.fastOutSlowIn,
-                  scrollDirection: Axis.horizontal,
                 ),
-              ),
-            ),
-          ),
         ],
       ),
     );

@@ -1,19 +1,17 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:news/models/articles.dart';
+import 'package:news/models/statistics/articles.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:news/models/games.dart';
-import 'package:news/models/player.dart';
+
+import '../models/statistics/player.dart';
+import '../shared/const.dart';
 
 class ArticlesProvider with ChangeNotifier {
-  List<ArticlesModel> articles = [];
-  List<ArticlesModel> otherArticles = [];
   List<GameModel> games = [];
   List<GameModel> otherGames = [];
-  List<PlayerModel> players = [];
-  List<PlayerModel> otherPlayers = [];
   int articleNumber = 2;
   int gameNumber = 2;
   int playerNumber = 2;
@@ -21,7 +19,7 @@ class ArticlesProvider with ChangeNotifier {
 
   Future<void> getArticles() async {
     articles = [];
-    String url = "https://api.ifmis-2030.icu/Article/1";
+    String url = "https://api.iffsma-2030.com/Article/1";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -47,7 +45,7 @@ class ArticlesProvider with ChangeNotifier {
       articleNumber++;
       notifyListeners();
     }
-    String url = "https://api.ifmis-2030.icu/Article/$articleNumber";
+    String url = "https://api.iffsma-2030.com/Article/$articleNumber";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -106,7 +104,7 @@ class ArticlesProvider with ChangeNotifier {
 
   Future<void> getPlayers() async {
     players = [];
-    String url = "https://api.ifmis-2030.icu/Players/1";
+    String url = "https://api.iffsma-2030.com/Players/1";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -132,7 +130,7 @@ class ArticlesProvider with ChangeNotifier {
       playerNumber++;
       notifyListeners();
     }
-    String url = "https://api.ifmis-2030.icu/Players/$playerNumber";
+    String url = "https://api.iffsma-2030.com/Players/$playerNumber";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);

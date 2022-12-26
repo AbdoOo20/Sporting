@@ -1,6 +1,4 @@
 // ignore_for_file: must_be_immutable, library_private_types_in_public_api, use_build_context_synchronously
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:news/providers/chat%20provider.dart';
@@ -10,10 +8,9 @@ import '../../shared/Components.dart';
 import '../../shared/Style.dart';
 
 class NewMessages extends StatefulWidget {
-  String id;
   String chatId;
 
-  NewMessages(this.id, this.chatId, {Key? key}) : super(key: key);
+  NewMessages(this.chatId, {Key? key}) : super(key: key);
 
   @override
   _NewMessagesState createState() => _NewMessagesState();
@@ -21,7 +18,6 @@ class NewMessages extends StatefulWidget {
 
 class _NewMessagesState extends State<NewMessages> {
   late ChatProvider chatProvider;
-  dynamic user = FirebaseAuth.instance.currentUser;
 
   showAlertDialog(BuildContext context) {
     Widget cancelButton = textButton(
@@ -31,9 +27,8 @@ class _NewMessagesState extends State<NewMessages> {
       white,
       sizeFromWidth(context, 20),
       FontWeight.bold,
-      () {
-        chatProvider.pickImage(widget.id, widget.chatId);
-        navigatePop(context);
+          () {
+            chatProvider.sendMessage(widget.chatId, '', 'image');
       },
     );
     Widget continueButton = textButton(
@@ -43,17 +38,16 @@ class _NewMessagesState extends State<NewMessages> {
       white,
       sizeFromWidth(context, 20),
       FontWeight.bold,
-      () {
-        chatProvider.pickVideo(widget.id, widget.chatId);
-        navigatePop(context);
+          () {
+            chatProvider.sendMessage(widget.chatId, '', 'video');
       },
     );
     AlertDialog alert = AlertDialog(
       title: textWidget(
-        'اختر من المعرض',
+        'قم بالاختيار من معرض الصور',
         null,
-        TextAlign.end,
-        black,
+        TextAlign.center,
+        primaryColor,
         sizeFromWidth(context, 20),
         FontWeight.bold,
       ),
@@ -105,9 +99,6 @@ class _NewMessagesState extends State<NewMessages> {
                   return null;
                 },
                 hint: 'اكتب رسالة...',
-                onChange: (value) {
-                  chatProvider.setMessage(value.toString().trim());
-                },
                 textAlignVertical: TextAlignVertical.center,
                 isExpanded: true,
               ),
@@ -119,39 +110,16 @@ class _NewMessagesState extends State<NewMessages> {
               padding: const EdgeInsets.all(10),
               child: circularProgressIndicator(lightGrey, primaryColor),
             ),
-          if ((!chatProvider.isLoading && chatProvider.enteredMessage != '') ||
-              (!chatProvider.isLoading && chatProvider.pickedImage != null))
+          if (!chatProvider.isLoading)
             IconButton(
               color: lightGrey,
               icon: const Icon(Icons.send, size: 30),
               disabledColor: lightGrey,
               onPressed: () {
-                chatProvider.enteredMessage == '' &&
-                        chatProvider.pickedImage == null
+                chatProvider.messageControl.text.isEmpty
                     ? null
                     : chatProvider.sendMessage(
-                        context, widget.id, widget.chatId);
-              },
-            ),
-          if (!chatProvider.isLoading &&
-              chatProvider.enteredMessage == '' &&
-              chatProvider.pickedImage == null)
-            IconButton(
-              icon: Icon(
-                chatProvider.isRecord ? Icons.stop : Icons.mic,
-                size: 30,
-                color: lightGrey,
-              ),
-              onPressed: () {
-                if (chatProvider.isRecord) {
-                  chatProvider.isRecord = false;
-                  chatProvider.toggleRecording(
-                      user!.uid, widget.id, widget.chatId);
-                } else if (!chatProvider.isRecord) {
-                  chatProvider.isRecord = true;
-                  chatProvider.toggleRecording(
-                      user!.uid, widget.id, widget.chatId);
-                }
+                        widget.chatId, chatProvider.messageControl.text.trim(), 'message');
               },
             ),
         ],

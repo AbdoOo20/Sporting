@@ -1,23 +1,15 @@
 // ignore_for_file: must_be_immutable
-
-import 'dart:developer';
-
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:news/models/user%20model.dart';
-import 'package:news/modules/competitions/Competitions.dart';
 import 'package:news/providers/competition%20provider.dart';
-import 'package:news/providers/other%20provider.dart';
-import 'package:news/providers/user%20provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 
 class RegisterCompetition extends StatefulWidget {
-  String competitionID;
+  int competitionID;
 
   RegisterCompetition(this.competitionID, {Key? key}) : super(key: key);
 
@@ -31,21 +23,10 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
   final TextEditingController position = TextEditingController();
   final TextEditingController videoLink = TextEditingController();
   late CompetitionProvider competitionProvider;
-  late UserProvider userProvider;
-  late OtherProvider otherProvider;
-  var currentUser = FirebaseAuth.instance.currentUser!.uid;
-
-  @override
-  void initState() {
-    Provider.of<UserProvider>(context, listen: false).getUserData(currentUser);
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     competitionProvider = Provider.of(context);
-    userProvider = Provider.of(context);
-    otherProvider = Provider.of(context);
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: white),
@@ -71,19 +52,13 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                 color: Color(0xFFbdbdbd),
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/images/icon.jpeg'),
+                  image: AssetImage('assets/images/logo 2.jpeg'),
                 ),
               ),
             ),
           ],
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            navigateAndFinish(context, const Competitions());
-          },
-        ),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -120,30 +95,12 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                   controller: videoLink,
                   type: TextInputType.text,
                   validate: (value) {
+                    if (value!.isEmpty) {
+                      return 'يجب إدخال رابط الفيديو';
+                    }
                     return null;
                   },
                   hint: 'أدخل رابط فيديو',
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: textButton(
-                          context,
-                          'اختر الفيديو',
-                          primaryColor,
-                          white,
-                          sizeFromWidth(context, 20),
-                          FontWeight.bold,
-                          () {
-                            competitionProvider.pickVideo();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
                 Padding(
                   padding:
@@ -174,13 +131,13 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                       Expanded(
                         child: textButton(
                           context,
-                          'اختر صورة النادى',
+                          'اختر صورة المتسابق',
                           primaryColor,
                           white,
                           sizeFromWidth(context, 20),
                           FontWeight.bold,
                           () {
-                            competitionProvider.selectClubImage();
+                            competitionProvider.selectCompetitorImage();
                           },
                         ),
                       ),
@@ -205,19 +162,11 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                             () async {
                               if (formKey.currentState!.validate()) {
                                 competitionProvider.shareInCompetition(
-                                  widget.competitionID,
+                                  widget.competitionID.toString(),
                                   name.text.trim(),
                                   position.text.trim(),
-                                  userProvider.userModel as UserModel,
                                   videoLink.text.trim(),
                                 );
-                                var competition = await FirebaseFirestore
-                                    .instance
-                                    .collection('competition')
-                                    .doc(widget.competitionID)
-                                    .get();
-                                otherProvider.sendNotification(
-                                    'يوجد شخص جديد يريد المشاركة فى مسابقة ${competition['name']}');
                               }
                             },
                           ),
@@ -237,23 +186,22 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: CarouselSlider(
-                      items: [
-                        Row(
+                      items: downBanners.map((e) {
+                        return Row(
                           children: [
                             Expanded(
                               child: Container(
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image:
-                                        AssetImage('assets/images/banner2.png'),
+                                    image: NetworkImage(e.image),
                                     fit: BoxFit.fitWidth,
                                   ),
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                      ],
+                        );
+                      }).toList(),
                       options: CarouselOptions(
                         height: 250,
                         initialPage: 0,
