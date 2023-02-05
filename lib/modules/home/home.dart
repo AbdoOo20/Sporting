@@ -1,5 +1,4 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 import 'package:news/modules/Authentication/log%20in.dart';
@@ -16,6 +15,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/user provider.dart';
 import '../../shared/Style.dart';
+import '../../shared/const.dart';
 import '../competitions/Competitions.dart';
 import 'drawer.dart';
 
@@ -88,12 +88,12 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    Provider.of<UserProvider>(context, listen: false).getNumberOfUsers();
-    String email = CacheHelper.getData(key: 'email') ?? '';
-    if (email != '') {
-      Provider.of<UserProvider>(context, listen: false)
-          .getNumberOfNotifications();
-    }
+    // Provider.of<UserProvider>(context, listen: false).getNumberOfUsers();
+    // String email = CacheHelper.getData(key: 'email') ?? '';
+    // if (email != '') {
+    //   Provider.of<UserProvider>(context, listen: false)
+    //       .getNumberOfNotifications();
+    // }
     super.initState();
   }
 
@@ -120,7 +120,7 @@ class _HomeState extends State<Home> {
                   color: Color(0xFFbdbdbd),
                   shape: BoxShape.circle,
                   image: DecorationImage(
-                    image: AssetImage('assets/images/icon.jpeg'),
+                    image: AssetImage('assets/images/logo 2.jpeg'),
                   ),
                 ),
               ),
@@ -140,14 +140,13 @@ class _HomeState extends State<Home> {
             IconButton(
               icon: const Icon(Icons.person_outline),
               onPressed: () {
-                String email = CacheHelper.getData(key: 'email') ?? '';
-                if (email == '') {
+                String token = CacheHelper.getData(key: 'token') ?? '';
+                if (token == '') {
                   navigateAndFinish(context, const SignUP());
                 } else {
-                  var currentUser = FirebaseAuth.instance.currentUser!.uid;
                   Provider.of<UserProvider>(context, listen: false)
-                      .getUserData(currentUser);
-                  navigateAndFinish(context, Profile(currentUser, 'home'));
+                      .getDataUser(context, token);
+                  navigateAndFinish(context, Profile(token, 'home', false, false, ''));
                 }
               },
             ),
@@ -164,7 +163,7 @@ class _HomeState extends State<Home> {
                 color: white,
                 child: Marquee(
                   text:
-                      "المملكة العربية السعودية, الاتحاد الدولي للتسويق والاستثمار الرياضى, يرحب بكم.",
+                      "للحصول على اخر نسخه من تطبيق الاتحاد الدولي - IFMIS نرجوا تحديث التطبيق من موقع السوق Google Play و Apple Store.",
                   style: TextStyle(fontWeight: FontWeight.bold, color: black),
                   scrollAxis: Axis.horizontal,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -180,22 +179,22 @@ class _HomeState extends State<Home> {
               child: Directionality(
                 textDirection: TextDirection.ltr,
                 child: CarouselSlider(
-                  items: [
-                    Container(
-                      height: sizeFromHeight(context, 10),
-                      width: sizeFromWidth(context, 1),
-                      margin: const EdgeInsets.symmetric(horizontal: 5),
-                      decoration: BoxDecoration(
-                        color: lightGrey,
-                        border: Border.all(),
-                        borderRadius: BorderRadius.circular(10),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/splash 2.gif'),
-                          fit: BoxFit.fill,
+                  items: upBanners.map((e) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: NetworkImage(e.image),
+                                fit: BoxFit.fitWidth,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  }).toList(),
                   options: CarouselOptions(
                     height: 250,
                     initialPage: 0,
@@ -530,22 +529,22 @@ class _HomeState extends State<Home> {
               child: Directionality(
                 textDirection: TextDirection.rtl,
                 child: CarouselSlider(
-                  items: [
-                    Row(
+                  items: downBanners.map((e) {
+                    return Row(
                       children: [
                         Expanded(
                           child: Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/images/banner2.png'),
+                                image: NetworkImage(e.image),
                                 fit: BoxFit.fitWidth,
                               ),
                             ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  }).toList(),
                   options: CarouselOptions(
                     height: 250,
                     initialPage: 0,
