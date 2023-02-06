@@ -41,8 +41,6 @@ dependencies:
   image_picker:
   intl:
   path_provider:
-  flutter_sound_lite:
-  audioplayers: ^0.20.1
   permission_handler:
   path: ^1.8.1
   url_launcher:
@@ -60,7 +58,6 @@ dependencies:
   share_plus:
   font_awesome:
   youtube_player_flutter:
-  device_info:
   flutter_datetime_picker:
     git:
       url: https://github.com/Realank/flutter_datetime_picker.git

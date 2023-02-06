@@ -122,7 +122,7 @@ class _MatchesSummaryState extends State<MatchesSummary> {
                                                 .toString()
                                                 .contains('youtu.be')) {
                                           navigateTo(context,
-                                              YoutubeVideo(doc[index]['link'],doc[index]['name']));
+                                              YoutubeVideo(doc[index]['link'],doc[index]['name'], 0));
                                         } else {
                                           navigateTo(context,
                                               ShowVideo(doc[index]['link']));

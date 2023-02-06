@@ -368,7 +368,8 @@ class _FansVoteState extends State<FansVote> {
                                                       competitionProvider
                                                           .competitors[index]
                                                           .videoLink,
-                                                      ''));
+                                                      'competition', competitionProvider
+                                                      .competitors[index].id));
                                             } else {
                                               navigateTo(
                                                   context,

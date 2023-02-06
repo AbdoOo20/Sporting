@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:news/modules/show%20video/comment%20video.dart';
 import 'package:news/providers/chat%20provider.dart';
+import 'package:news/providers/competition%20provider.dart';
 import 'package:news/providers/other%20provider.dart';
 import 'package:news/shared/Components.dart';
 import 'package:provider/provider.dart';
@@ -21,9 +22,11 @@ import '../Authentication/sign up.dart';
 
 class YoutubeVideo extends StatefulWidget {
   String videoLink;
-  String title;
+  String pageName;
+  int competitorId;
 
-  YoutubeVideo(this.videoLink, this.title, {Key? key}) : super(key: key);
+  YoutubeVideo(this.videoLink, this.pageName, this.competitorId, {Key? key})
+      : super(key: key);
 
   @override
   State<YoutubeVideo> createState() => _YoutubeVideoState();
@@ -31,7 +34,7 @@ class YoutubeVideo extends StatefulWidget {
 
 class _YoutubeVideoState extends State<YoutubeVideo> {
   late ChatProvider chatProvider;
-  late OtherProvider otherProvider;
+  late CompetitionProvider competitionProvider;
 
   showAlertDialog(BuildContext context) {
     Widget cancelButton = textButton(
@@ -94,13 +97,17 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
   void initState() {
     Provider.of<ChatProvider>(context, listen: false)
         .initializeYoutubePlayer(widget.videoLink);
+    if (widget.pageName == 'competition') {
+      Provider.of<CompetitionProvider>(context, listen: false)
+          .getComments(widget.competitorId);
+    }
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     chatProvider = Provider.of(context);
-    otherProvider = Provider.of(context);
+    competitionProvider = Provider.of(context);
     return Scaffold(
       appBar: chatProvider.youtubePlayerController.value.isFullScreen
           ? null
@@ -140,251 +147,145 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
         condition: !chatProvider.youtubePlayerController.value.hasError,
         builder: (context) {
           return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (!chatProvider.youtubePlayerController.value.isFullScreen)
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('commentVideo')
-                        .orderBy('time', descending: true)
-                        .snapshots(),
-                    builder: (ctx, snapShot) {
-                      final doc = snapShot.data?.docs;
-                      if (doc == null || doc.isEmpty) {
-                        return const Center();
-                      } else {
-                        return ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: doc.length,
-                          itemBuilder: (ctx, index) {
-                            if(index == 0) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.all(5),
-                                    child: YoutubePlayer(
-                                      controller: chatProvider.youtubePlayerController,
-                                      showVideoProgressIndicator: true,
-                                      progressIndicatorColor: primaryColor,
-                                      progressColors: ProgressBarColors(
-                                        playedColor: primaryColor,
-                                        handleColor: lightGrey,
+              Expanded(
+                child: ListView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.all(5),
+                            child: YoutubePlayer(
+                              controller: chatProvider.youtubePlayerController,
+                              showVideoProgressIndicator: true,
+                              progressIndicatorColor: primaryColor,
+                              progressColors: ProgressBarColors(
+                                playedColor: primaryColor,
+                                handleColor: lightGrey,
+                              ),
+                            ),
+                          ),
+                          if (!chatProvider.youtubePlayerController.value.isFullScreen)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () async {
+                                      var url = Uri.parse(widget.videoLink);
+                                      await launchUrl(url,
+                                          mode: LaunchMode.inAppWebView);
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 5, vertical: 5),
+                                      padding: const EdgeInsets.all(5),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: primaryColor,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: textWidget(
+                                        'الفيديو باليوتيوب',
+                                        null,
+                                        null,
+                                        white,
+                                        sizeFromWidth(context, 20),
+                                        FontWeight.bold,
                                       ),
                                     ),
                                   ),
-                                  if (!chatProvider.youtubePlayerController.value.isFullScreen)
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: InkWell(
-                                            onTap: () async{
-                                              var url = Uri.parse(widget.videoLink);
-                                              await launchUrl(url, mode: LaunchMode.inAppWebView);
-                                            },
-                                            child: Container(
-                                              margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                                              padding: const EdgeInsets.all(5),
-                                              alignment: Alignment.center,
-                                              decoration: BoxDecoration(
-                                                color: primaryColor,
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                              child: textWidget(
-                                                'الفيديو باليوتيوب',
-                                                null,
-                                                null,
-                                                white,
-                                                sizeFromWidth(context, 20),
-                                                FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                ),
+                              ],
+                            ),
+                          if (!chatProvider.youtubePlayerController.value.isFullScreen)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 5),
+                                    padding: const EdgeInsets.all(5),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: primaryColor,
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                  if (!chatProvider.youtubePlayerController.value.isFullScreen)
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: InkWell(
-                                            onTap: () {
-                                              String email =
-                                                  CacheHelper.getData(key: 'email') ?? '';
-                                              if (email == '') {
-                                                showAlertDialog(context);
-                                              } else {
-                                                navigateTo(context, CommentVideo(widget.title));
-                                              }
-                                            },
-                                            child: Container(
-                                              margin: const EdgeInsets.symmetric(horizontal: 5),
-                                              padding: const EdgeInsets.all(5),
-                                              alignment: Alignment.center,
-                                              decoration: BoxDecoration(
-                                                color: primaryColor,
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                              child: textWidget(
-                                                'التعليقات',
-                                                null,
-                                                null,
-                                                white,
-                                                sizeFromWidth(context, 20),
-                                                FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    child: textWidget(
+                                      'التعليقات',
+                                      null,
+                                      null,
+                                      white,
+                                      sizeFromWidth(context, 20),
+                                      FontWeight.bold,
                                     ),
-                                  // if (doc[index]['title'] == widget.title)
-                                  //   Container(
-                                  //     padding: const EdgeInsets.all(5),
-                                  //     margin: const EdgeInsets.all(5),
-                                  //     width: sizeFromWidth(context, 1),
-                                  //     decoration: BoxDecoration(
-                                  //       borderRadius: BorderRadius.circular(10),
-                                  //       color: const Color(0xFF7f0e14),
-                                  //     ),
-                                  //     child: Row(
-                                  //       mainAxisAlignment: MainAxisAlignment.end,
-                                  //       children: [
-                                  //         if (currentUser == doc[index]['id'])
-                                  //           IconButton(
-                                  //               onPressed: () {
-                                  //                 otherProvider
-                                  //                     .deleteComment(doc[index].id);
-                                  //               },
-                                  //               icon:
-                                  //               Icon(Icons.delete, color: white)),
-                                  //         Expanded(
-                                  //           child: Column(
-                                  //             crossAxisAlignment:
-                                  //             CrossAxisAlignment.end,
-                                  //             children: [
-                                  //               Text(
-                                  //                 doc[index]['name'],
-                                  //                 textDirection: TextDirection.rtl,
-                                  //                 style: TextStyle(
-                                  //                   fontSize:
-                                  //                   sizeFromWidth(context, 25),
-                                  //                   fontWeight: FontWeight.bold,
-                                  //                   color: white,
-                                  //                 ),
-                                  //               ),
-                                  //               Text(
-                                  //                 doc[index]['comment'],
-                                  //                 textDirection: TextDirection.rtl,
-                                  //                 style: TextStyle(
-                                  //                   fontSize:
-                                  //                   sizeFromWidth(context, 30),
-                                  //                   fontWeight: FontWeight.bold,
-                                  //                   color: white,
-                                  //                 ),
-                                  //               ),
-                                  //             ],
-                                  //           ),
-                                  //         ),
-                                  //         const SizedBox(width: 5),
-                                  //         if (doc[index]['image'] != '')
-                                  //           Container(
-                                  //             width: sizeFromWidth(context, 7),
-                                  //             height: sizeFromHeight(context, 12,
-                                  //                 hasAppBar: true),
-                                  //             decoration: BoxDecoration(
-                                  //               color: white,
-                                  //               borderRadius:
-                                  //               BorderRadius.circular(10),
-                                  //               image: DecorationImage(
-                                  //                   image: NetworkImage(
-                                  //                       doc[index]['image']),
-                                  //                   fit: BoxFit.cover),
-                                  //             ),
-                                  //           ),
-                                  //       ],
-                                  //     ),
-                                  //   ),
-                                ],
-                              );
-                            }
-                            // if (doc[index]['title'] == widget.title) {
-                            //   return Container(
-                            //     padding: const EdgeInsets.all(5),
-                            //     margin: const EdgeInsets.all(5),
-                            //     width: sizeFromWidth(context, 1),
-                            //     decoration: BoxDecoration(
-                            //       borderRadius: BorderRadius.circular(10),
-                            //       color: const Color(0xFF7f0e14),
-                            //     ),
-                            //     child: Row(
-                            //       mainAxisAlignment: MainAxisAlignment.end,
-                            //       children: [
-                            //         if (currentUser == doc[index]['id'])
-                            //           IconButton(
-                            //               onPressed: () {
-                            //                 otherProvider
-                            //                     .deleteComment(doc[index].id);
-                            //               },
-                            //               icon:
-                            //                   Icon(Icons.delete, color: white)),
-                            //         Expanded(
-                            //           child: Column(
-                            //             crossAxisAlignment:
-                            //                 CrossAxisAlignment.end,
-                            //             children: [
-                            //               Text(
-                            //                 doc[index]['name'],
-                            //                 textDirection: TextDirection.rtl,
-                            //                 style: TextStyle(
-                            //                   fontSize:
-                            //                       sizeFromWidth(context, 25),
-                            //                   fontWeight: FontWeight.bold,
-                            //                   color: white,
-                            //                 ),
-                            //               ),
-                            //               Text(
-                            //                 doc[index]['comment'],
-                            //                 textDirection: TextDirection.rtl,
-                            //                 style: TextStyle(
-                            //                   fontSize:
-                            //                       sizeFromWidth(context, 30),
-                            //                   fontWeight: FontWeight.bold,
-                            //                   color: white,
-                            //                 ),
-                            //               ),
-                            //             ],
-                            //           ),
-                            //         ),
-                            //         const SizedBox(width: 5),
-                            //         if (doc[index]['image'] != '')
-                            //           Container(
-                            //             width: sizeFromWidth(context, 7),
-                            //             height: sizeFromHeight(context, 12,
-                            //                 hasAppBar: true),
-                            //             decoration: BoxDecoration(
-                            //               color: white,
-                            //               borderRadius:
-                            //                   BorderRadius.circular(10),
-                            //               image: DecorationImage(
-                            //                   image: NetworkImage(
-                            //                       doc[index]['image']),
-                            //                   fit: BoxFit.cover),
-                            //             ),
-                            //           ),
-                            //       ],
-                            //     ),
-                            //   );
-                            // }
-                            return const SizedBox();
-                          },
-                        );
-                      }
-                    },
-                  ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    for (int i = 0; i < competitionProvider.comments.length; i++)
+                      if (widget.pageName == 'competition' && !chatProvider.youtubePlayerController.value.isFullScreen)
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(left: 5, right: 5, top: 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: materialWidget(
+                                    context,
+                                    null,
+                                    sizeFromWidth(context, 1),
+                                    15,
+                                    null,
+                                    BoxFit.fill,
+                                    [
+                                      textWidget(
+                                        competitionProvider
+                                            .comments[i].user.name,
+                                        TextDirection.rtl,
+                                        null,
+                                        black,
+                                        sizeFromWidth(context, 25),
+                                        FontWeight.bold,
+                                      ),
+                                      textWidget(
+                                        competitionProvider.comments[i].comment,
+                                        TextDirection.rtl,
+                                        null,
+                                        black,
+                                        sizeFromWidth(context, 30),
+                                        FontWeight.bold,
+                                      ),
+                                    ],
+                                    MainAxisAlignment.start,
+                                    false,
+                                    10,
+                                    lightGrey,
+                                    () {},
+                                    CrossAxisAlignment.end),
+                              ),
+                              const SizedBox(width: 5),
+                              storyShape(
+                                context,
+                                lightGrey,
+                                competitionProvider.comments[i].user.image != ''
+                                    ? NetworkImage(competitionProvider
+                                        .comments[i].user.image)
+                                    : null,
+                                30,
+                                33,
+                              ),
+                            ],
+                          ),
+                        ),
+                  ],
                 ),
+              ),
               if (!chatProvider.youtubePlayerController.value.isFullScreen)
                 Container(
                   color: primaryColor,

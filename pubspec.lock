@@ -29,13 +29,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.9.0"
-  audioplayers:
-    dependency: "direct main"
-    description:
-      name: audioplayers
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.20.1"
   auto_orientation:
     dependency: "direct main"
     description:
@@ -155,20 +148,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.5"
-  device_info:
-    dependency: "direct main"
-    description:
-      name: device_info
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.3"
-  device_info_platform_interface:
-    dependency: transitive
-    description:
-      name: device_info_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.1"
   fading_edge_scrollview:
     dependency: transitive
     description:
@@ -337,27 +316,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.7"
-  flutter_sound_lite:
-    dependency: "direct main"
-    description:
-      name: flutter_sound_lite
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "8.5.0"
-  flutter_sound_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_sound_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "8.5.0"
-  flutter_sound_web:
-    dependency: transitive
-    description:
-      name: flutter_sound_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "8.5.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -501,13 +459,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
-  logger:
-    dependency: transitive
-    description:
-      name: logger
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.1.0"
   marquee:
     dependency: "direct main"
     description:
@@ -690,13 +641,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "6.0.4"
-  recase:
-    dependency: transitive
-    description:
-      name: recase
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.1.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -800,13 +744,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.1"
-  synchronized:
-    dependency: transitive
-    description:
-      name: synchronized
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.0+3"
   term_glyph:
     dependency: transitive
     description:
