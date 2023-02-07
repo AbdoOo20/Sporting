@@ -67,7 +67,8 @@ class _MatchesScoresState extends State<MatchesScores> {
 
   @override
   void initState() {
-    Provider.of<MatchesStatisticsProvider>(context, listen: false).getScores(widget.champion);
+    Provider.of<MatchesStatisticsProvider>(context, listen: false)
+        .getScores(widget.champion);
     super.initState();
   }
 
@@ -222,7 +223,7 @@ class _MatchesScoresState extends State<MatchesScores> {
                                 color: primaryColor,
                               ),
                               child: textWidget(
-                                data[index].goals,
+                                data[index].goals.toString(),
                                 null,
                                 null,
                                 white,
@@ -235,9 +236,11 @@ class _MatchesScoresState extends State<MatchesScores> {
                             margin: const EdgeInsets.symmetric(horizontal: 40),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
-                              image: DecorationImage(
-                                image: NetworkImage(data[index].logo),
-                              ),
+                              image: data[index].logo != ''
+                                  ? DecorationImage(
+                                      image: NetworkImage(data[index].logo),
+                                    )
+                                  : null,
                             ),
                           ),
                           const Spacer(),
@@ -245,7 +248,7 @@ class _MatchesScoresState extends State<MatchesScores> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               textWidget(
-                                  removeArabic(data[index].name),
+                                  removeArabic(data[index].name.toString()),
                                   null,
                                   TextAlign.center,
                                   white,
@@ -254,7 +257,7 @@ class _MatchesScoresState extends State<MatchesScores> {
                                   null,
                                   1),
                               textWidget(
-                                data[index].aldawla,
+                                data[index].aldawla.toString(),
                                 TextDirection.rtl,
                                 null,
                                 white,
@@ -268,9 +271,11 @@ class _MatchesScoresState extends State<MatchesScores> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: primaryColor,
-                              image: DecorationImage(
-                                image: NetworkImage(data[index].img),
-                              ),
+                              image: data[index].img != ''
+                                  ? DecorationImage(
+                                      image: NetworkImage(data[index].img),
+                                    )
+                                  : null,
                             ),
                           ),
                           Container(
@@ -280,7 +285,7 @@ class _MatchesScoresState extends State<MatchesScores> {
                               color: primaryColor,
                             ),
                             child: textWidget(
-                              data[index].rank,
+                              data[index].rank.toString(),
                               null,
                               null,
                               white,
@@ -304,43 +309,43 @@ class _MatchesScoresState extends State<MatchesScores> {
             },
           ),
           Container(
-                  color: primaryColor,
-                  height: sizeFromHeight(context, 10),
-                  width: sizeFromWidth(context, 1),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: CarouselSlider(
-                      items: downBanners.map((e) {
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: NetworkImage(e.image),
-                                    fit: BoxFit.fitWidth,
-                                  ),
-                                ),
-                              ),
+            color: primaryColor,
+            height: sizeFromHeight(context, 10),
+            width: sizeFromWidth(context, 1),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: CarouselSlider(
+                items: downBanners.map((e) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(e.image),
+                              fit: BoxFit.fitWidth,
                             ),
-                          ],
-                        );
-                      }).toList(),
-                      options: CarouselOptions(
-                        height: 250,
-                        initialPage: 0,
-                        enableInfiniteScroll: true,
-                        reverse: false,
-                        autoPlay: true,
-                        viewportFraction: 1,
-                        autoPlayInterval: const Duration(seconds: 3),
-                        autoPlayAnimationDuration: const Duration(seconds: 1),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                        scrollDirection: Axis.horizontal,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    ],
+                  );
+                }).toList(),
+                options: CarouselOptions(
+                  height: 250,
+                  initialPage: 0,
+                  enableInfiniteScroll: true,
+                  reverse: false,
+                  autoPlay: true,
+                  viewportFraction: 1,
+                  autoPlayInterval: const Duration(seconds: 3),
+                  autoPlayAnimationDuration: const Duration(seconds: 1),
+                  autoPlayCurve: Curves.fastOutSlowIn,
+                  scrollDirection: Axis.horizontal,
                 ),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -150,6 +150,33 @@ class _HomeState extends State<Home> {
               Expanded(
                 child: InkWell(
                   onTap: () {
+                    CacheHelper.saveData(key: 'policies', value: true);
+                    setState(() {
+                      showPolicies = true;
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.all(10),
+                    child: textWidget(
+                      'لا أوافق',
+                      null,
+                      null,
+                      white,
+                      sizeFromWidth(context, 20),
+                      FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
                     navigateAndFinish(context, const Policies());
                   },
                   child: Container(

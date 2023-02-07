@@ -19,10 +19,10 @@ class MatchesScoresModel {
     return MatchesScoresModel(
       name: json['name'],
       rank: json['rank'],
-      img: json['img'],
+      img: json['img'] ?? '',
       goals: json['goals'],
       aldawla: json['name_aldawla'],
-      logo: json['logo_aldawla'],
+      logo: json['logo_aldawla'] ?? '',
     );
   }
 }

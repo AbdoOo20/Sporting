@@ -48,9 +48,8 @@ CircularProgressIndicator circularProgressIndicator(
   Color backgroundColor,
   Color colorWidget,
 ) {
-  return CircularProgressIndicator(
-    backgroundColor: backgroundColor,
-    color: colorWidget,
+  return CircularProgressIndicator.adaptive(
+    backgroundColor: colorWidget,
     strokeWidth: 5,
   );
 }
