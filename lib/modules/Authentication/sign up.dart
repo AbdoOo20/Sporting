@@ -24,9 +24,6 @@ class _SignUPState extends State<SignUP> {
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
   final TextEditingController userName = TextEditingController();
-  final TextEditingController phone = TextEditingController();
-  final TextEditingController country = TextEditingController();
-  final TextEditingController kind = TextEditingController();
   late UserProvider userProvider;
 
   @override
@@ -79,7 +76,7 @@ class _SignUPState extends State<SignUP> {
               child: ListView(
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  SizedBox(height: sizeFromHeight(context, 50)),
+                  SizedBox(height: sizeFromHeight(context, 5)),
                   textFormField(
                     controller: userName,
                     type: TextInputType.text,
@@ -113,39 +110,6 @@ class _SignUPState extends State<SignUP> {
                     },
                     hint: 'أدخل كلمة السر',
                   ),
-                  textFormField(
-                    controller: phone,
-                    type: TextInputType.text,
-                    validate: (value) {
-                      if (value!.isEmpty) {
-                        return 'رقم الهاتف قصير';
-                      }
-                      return null;
-                    },
-                    hint: 'أدخل رقم الهاتف',
-                  ),
-                  textFormField(
-                    controller: country,
-                    type: TextInputType.text,
-                    validate: (value) {
-                      if (value!.isEmpty || value.length < 3) {
-                        return 'اسم الدولة قصير';
-                      }
-                      return null;
-                    },
-                    hint: 'أدخل الدولة',
-                  ),
-                  textFormField(
-                    controller: kind,
-                    type: TextInputType.text,
-                    validate: (value) {
-                      if (value != 'ذكر' && value != 'أنثى') {
-                        return 'يجب كتابة ذكر أو أنثى فى هذه الخانه';
-                      }
-                      return null;
-                    },
-                    hint: 'أدخل الجنس',
-                  ),
                   if (!userProvider.isLoading)
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -163,9 +127,6 @@ class _SignUPState extends State<SignUP> {
                               userName: userName.text.trim(),
                               email: email.text.trim(),
                               password: password.text.trim(),
-                              phone: phone.text.trim(),
-                              country: country.text.trim(),
-                              type: kind.text.trim(),
                             );
                             userProvider.userRegister(context,userModel);
                           }
@@ -190,7 +151,7 @@ class _SignUPState extends State<SignUP> {
                     ),
                   if (userProvider.isLoading)
                     Center(
-                      child: circularProgressIndicator(lightGrey, primaryColor),
+                      child: circularProgressIndicator(lightGrey, primaryColor, context),
                     ),
                 ],
               ),

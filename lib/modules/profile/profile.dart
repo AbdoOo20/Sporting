@@ -25,7 +25,10 @@ class Profile extends StatefulWidget {
   bool isChatAdmin;
   bool isUserBlocked;
 
-  Profile(this.token, this.page, this.isChatAdmin, this.isUserBlocked, this.chatID, {Key? key}) : super(key: key);
+  Profile(
+      this.token, this.page, this.isChatAdmin, this.isUserBlocked, this.chatID,
+      {Key? key})
+      : super(key: key);
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -34,6 +37,64 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   late UserProvider userProvider;
   late ChatProvider chatProvider;
+
+  showAlertDialog(BuildContext context) {
+    Widget cancelButton = textButton(
+      context,
+      'رجوع',
+      primaryColor,
+      white,
+      sizeFromWidth(context, 20),
+      FontWeight.bold,
+      () {
+        navigatePop(context);
+      },
+    );
+    Widget continueButton = textButton(
+      context,
+      'حذف',
+      primaryColor,
+      white,
+      sizeFromWidth(context, 20),
+      FontWeight.bold,
+      () {
+        Provider.of<UserProvider>(context, listen: false)
+            .deleteAccount(context);
+      },
+    );
+    AlertDialog alert = AlertDialog(
+      title: textWidget(
+        'هل أنت متأكد من حذف حسابك ؟',
+        null,
+        TextAlign.end,
+        black,
+        sizeFromWidth(context, 25),
+        FontWeight.bold,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(child: continueButton),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              Expanded(child: cancelButton),
+            ],
+          ),
+        ],
+      ),
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +148,15 @@ class _ProfileState extends State<Profile> {
                   navigateAndFinish(context, const Home());
                 },
               ),
+        actions: [
+          if (token == widget.token && widget.page != 'chat')
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                showAlertDialog(context);
+              },
+            ),
+        ],
       ),
       body: ConditionalBuilder(
         condition: !userProvider.isLoading,
@@ -173,14 +243,17 @@ class _ProfileState extends State<Profile> {
                         FontWeight.bold,
                       ),
                     ),
-                    if (token != widget.token && id.toString() != widget.token && widget.isChatAdmin)
+                    if (token != widget.token &&
+                        id.toString() != widget.token &&
+                        widget.isChatAdmin)
                       InkWell(
                         onTap: () {
                           chatProvider.blockUser(widget.chatID, widget.token);
                           widget.isUserBlocked = !widget.isUserBlocked;
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
                           margin: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
@@ -228,7 +301,12 @@ class _ProfileState extends State<Profile> {
                                     child: InkWell(
                                       onTap: () {
                                         navigateAndFinish(
-                                            context, EditProfile(token, widget.isChatAdmin, widget.isUserBlocked, widget.chatID));
+                                            context,
+                                            EditProfile(
+                                                token,
+                                                widget.isChatAdmin,
+                                                widget.isUserBlocked,
+                                                widget.chatID));
                                       },
                                       child: textWidget(
                                         'تعديل',
@@ -551,7 +629,7 @@ class _ProfileState extends State<Profile> {
         },
         fallback: (context) {
           return Center(
-            child: circularProgressIndicator(lightGrey, primaryColor),
+            child: circularProgressIndicator(lightGrey, primaryColor, context),
           );
         },
       ),

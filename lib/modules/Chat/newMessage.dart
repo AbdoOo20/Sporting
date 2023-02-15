@@ -108,7 +108,7 @@ class _NewMessagesState extends State<NewMessages> {
           if (chatProvider.isLoading)
             Container(
               padding: const EdgeInsets.all(10),
-              child: circularProgressIndicator(lightGrey, primaryColor),
+              child: circularProgressIndicator(lightGrey, primaryColor, context),
             ),
           if (!chatProvider.isLoading)
             IconButton(

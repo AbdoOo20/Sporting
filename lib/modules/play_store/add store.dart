@@ -153,7 +153,7 @@ class _AddStoreState extends State<AddStore> {
                   ),
                 if (storeProvider.isLoading)
                   Center(
-                    child: circularProgressIndicator(lightGrey, primaryColor),
+                    child: circularProgressIndicator(lightGrey, primaryColor, context),
                   ),
                 const Spacer(),
                 Container(

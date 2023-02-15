@@ -128,7 +128,7 @@ class _ReportState extends State<Report> {
                 ),
               ),
             if (userProvider.isLoading)
-              circularProgressIndicator(lightGrey, primaryColor),
+              circularProgressIndicator(lightGrey, primaryColor, context),
             const Spacer(),
             Container(
               color: primaryColor,

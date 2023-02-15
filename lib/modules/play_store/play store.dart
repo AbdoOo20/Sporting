@@ -89,7 +89,7 @@ class _PlayStoreState extends State<PlayStore> {
                 if (snapShot.connectionState == ConnectionState.waiting) {
                   return Center(
                       child:
-                          circularProgressIndicator(lightGrey, primaryColor));
+                          circularProgressIndicator(lightGrey, primaryColor, context));
                 }
                 final doc = snapShot.data?.docs;
                 if (doc == null || doc.isEmpty) {

@@ -263,7 +263,7 @@ class _MatchesStatisticsState extends State<MatchesStatistics> {
               return Expanded(
                   child: Center(
                       child:
-                          circularProgressIndicator(lightGrey, primaryColor)));
+                          circularProgressIndicator(lightGrey, primaryColor, context)));
             },
           ),
           Container(

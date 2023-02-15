@@ -61,104 +61,50 @@ class _VisionMissionAndGoalsState extends State<VisionMissionAndGoals> {
         children: [
           SizedBox(height: sizeFromHeight(context, 50)),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('vision')
-                  .orderBy('time', descending: false)
-                  .snapshots(),
-              builder: (ctx, snapShot) {
-                if (snapShot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child:
-                      circularProgressIndicator(lightGrey, primaryColor));
-                }
-                final doc = snapShot.data?.docs;
-                if (doc == null || doc.isEmpty) {
-                  return const Center();
-                } else {
-                  return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: doc.length,
-                    itemBuilder: (ctx, index) {
-                      if (index == 0) {
-                        return Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(sizeFromWidth(context, 6)),
-                              decoration: BoxDecoration(
-                                color: primaryColor,
-                                shape: BoxShape.circle,
-                                image: const DecorationImage(
-                                  image: AssetImage('assets/images/logo 2.jpeg'),
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(5),
-                              margin: const EdgeInsets.all(5),
-                              width: sizeFromWidth(context, 1),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: white,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      doc[index]['text'],
-                                      textDirection: doc[index]['text']
-                                          .toString()
-                                          .contains(arabic[18])
-                                          ? TextDirection.rtl
-                                          : TextDirection.ltr,
-                                      style: TextStyle(
-                                        fontSize: sizeFromWidth(context, 30),
-                                        fontWeight: FontWeight.bold,
-                                        color: black,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                      return Container(
-                        padding: const EdgeInsets.all(5),
-                        margin: const EdgeInsets.all(5),
-                        width: sizeFromWidth(context, 1),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: white,
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              children: [
+                Container(
+                  padding: EdgeInsets.all(sizeFromWidth(context, 6)),
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/logo 2.jpeg'),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  margin: const EdgeInsets.all(5),
+                  width: sizeFromWidth(context, 1),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: white,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          settingModel.vision,
+                          textDirection: settingModel.vision
+                              .toString()
+                              .contains(arabic[18])
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
+                          style: TextStyle(
+                            fontSize: sizeFromWidth(context, 30),
+                            fontWeight: FontWeight.bold,
+                            color: black,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                doc[index]['text'],
-                                textDirection: doc[index]['text']
-                                    .toString()
-                                    .contains(arabic[18])
-                                    ? TextDirection.rtl
-                                    : TextDirection.ltr,
-                                style: TextStyle(
-                                  fontSize: sizeFromWidth(context, 30),
-                                  fontWeight: FontWeight.bold,
-                                  color: black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                }
-              },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           Container(

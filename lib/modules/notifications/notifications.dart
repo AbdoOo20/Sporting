@@ -64,7 +64,7 @@ class _NotificationsState extends State<Notifications> {
             .snapshots(),
         builder: (ctx, snapShot) {
           if (snapShot.connectionState == ConnectionState.waiting) {
-            return circularProgressIndicator(lightGrey, primaryColor);
+            return circularProgressIndicator(lightGrey, primaryColor, context);
           }
           final doc = snapShot.data!.docs;
           var id = FirebaseAuth.instance.currentUser!.uid;

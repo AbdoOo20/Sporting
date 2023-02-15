@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:news/models/other/setting%20model.dart';
 import 'package:news/shared/Components.dart';
 import 'package:http/http.dart' as http;
 import 'package:news/shared/const.dart';
@@ -11,7 +12,6 @@ import 'package:news/shared/const.dart';
 import '../models/other/banner model.dart';
 
 class OtherProvider with ChangeNotifier {
-
   Future<void> getBanners() async {
     upBanners = [];
     downBanners = [];
@@ -30,6 +30,24 @@ class OtherProvider with ChangeNotifier {
       notifyListeners();
     } else {
       showToast(text: data['message'], state: ToastStates.ERROR);
+      notifyListeners();
+    }
+  }
+
+  void getSettings() async {
+    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/setting');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+      },
+    );
+    Map<String, dynamic> getData = json.decode(response.body);
+    if (response.statusCode == 200) {
+      settingModel = SettingModel.fromJSON(getData['data']);
+      notifyListeners();
+    } else {
+      showToast(text: getData['message'], state: ToastStates.ERROR);
       notifyListeners();
     }
   }

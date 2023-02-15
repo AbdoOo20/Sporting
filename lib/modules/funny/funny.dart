@@ -80,7 +80,7 @@ class _FunnyState extends State<Funny> {
                     height: sizeFromHeight(context, 2),
                     child: Center(
                         child:
-                        circularProgressIndicator(lightGrey, primaryColor)),
+                        circularProgressIndicator(lightGrey, primaryColor, context)),
                   ),
                 if (articlesProvider.games.isNotEmpty)
                   for (int i = 0; i < articlesProvider.games.length; i++)
@@ -105,7 +105,7 @@ class _FunnyState extends State<Funny> {
                     padding: const EdgeInsets.all(5),
                     child: Center(
                         child:
-                            circularProgressIndicator(lightGrey, primaryColor)),
+                            circularProgressIndicator(lightGrey, primaryColor, context)),
                   ),
               ],
             ),

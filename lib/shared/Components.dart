@@ -1,5 +1,8 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -44,14 +47,23 @@ Widget divider(double start, double end, Color color) {
   );
 }
 
-CircularProgressIndicator circularProgressIndicator(
+StatefulWidget circularProgressIndicator(
   Color backgroundColor,
   Color colorWidget,
+    BuildContext context,
 ) {
-  return CircularProgressIndicator.adaptive(
-    backgroundColor: colorWidget,
-    strokeWidth: 5,
-  );
+  if (Platform.isAndroid) {
+    return CircularProgressIndicator(
+      backgroundColor: backgroundColor,
+      color: colorWidget,
+      strokeWidth: 5,
+    );
+  } else {
+    return CupertinoActivityIndicator(
+      color: primaryColor,
+      radius: sizeFromWidth(context, 15),
+    );
+  }
 }
 
 Text textWidget(String text, TextDirection? textDirection, TextAlign? textAlign,

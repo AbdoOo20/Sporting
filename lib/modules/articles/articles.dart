@@ -181,14 +181,14 @@ class _ArticlesState extends State<Articles> {
                     padding: const EdgeInsets.all(5),
                     child: Center(
                         child:
-                            circularProgressIndicator(lightGrey, primaryColor)),
+                            circularProgressIndicator(lightGrey, primaryColor, context)),
                   ),
                 if (articles.isEmpty)
                   SizedBox(
                     height: sizeFromHeight(context, 2),
                     child: Center(
                         child:
-                            circularProgressIndicator(lightGrey, primaryColor)),
+                            circularProgressIndicator(lightGrey, primaryColor, context)),
                   ),
               ],
             ),

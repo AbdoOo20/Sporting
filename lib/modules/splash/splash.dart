@@ -21,11 +21,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void initState() {
+    Provider.of<OtherProvider>(context, listen: false).getBanners();
+    Provider.of<OtherProvider>(context, listen: false).getSettings();
     Provider.of<ArticlesProvider>(context, listen: false).getPlayers();
     Provider.of<ArticlesProvider>(context, listen: false).getOtherPlayers(true);
     Provider.of<ArticlesProvider>(context, listen: false).getArticles();
     Provider.of<ArticlesProvider>(context, listen: false).getOtherArticles(true);
-    Provider.of<OtherProvider>(context, listen: false).getBanners();
     Timer(
       const Duration(seconds: 4),
       () {

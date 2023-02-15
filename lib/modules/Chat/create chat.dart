@@ -152,7 +152,7 @@ class _CreateChatState extends State<CreateChat> {
                   ),
                 if (chatProvider.isLoading)
                   Center(
-                    child: circularProgressIndicator(lightGrey, primaryColor),
+                    child: circularProgressIndicator(lightGrey, primaryColor, context),
                   ),
                 const Spacer(),
                 Container(

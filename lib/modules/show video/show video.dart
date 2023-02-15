@@ -99,7 +99,7 @@ class _ShowVideoState extends State<ShowVideo> {
       },
       fallback: (context) {
         return Center(
-          child: circularProgressIndicator(white, primaryColor),
+          child: circularProgressIndicator(white, primaryColor, context),
         );
       },
     );
@@ -125,7 +125,7 @@ class _ShowVideoState extends State<ShowVideo> {
                     child: VideoPlayer(chatProvider.videoPlayerController),
                   ),
                 if (!chatProvider.videoPlayerController.value.isInitialized)
-                  circularProgressIndicator(white, primaryColor),
+                  circularProgressIndicator(white, primaryColor, context),
               ],
             ),
           ),
@@ -283,7 +283,7 @@ class _ShowVideoState extends State<ShowVideo> {
                     child: VideoPlayer(chatProvider.videoPlayerController),
                   ),
                 if (!chatProvider.videoPlayerController.value.isInitialized)
-                  circularProgressIndicator(white, primaryColor),
+                  circularProgressIndicator(white, primaryColor, context),
                 if (chatProvider.showControl)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

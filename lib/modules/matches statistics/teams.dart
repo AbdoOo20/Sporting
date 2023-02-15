@@ -342,7 +342,7 @@ class _TeamsState extends State<Teams> {
               return Expanded(
                   child: Center(
                       child:
-                          circularProgressIndicator(lightGrey, primaryColor)));
+                          circularProgressIndicator(lightGrey, primaryColor, context)));
             },
           ),
           Container(

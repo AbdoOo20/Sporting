@@ -127,7 +127,7 @@ class _PlayersTransactionState extends State<PlayersTransaction> {
                     height: sizeFromHeight(context, 2),
                     child: Center(
                         child:
-                            circularProgressIndicator(lightGrey, primaryColor)),
+                            circularProgressIndicator(lightGrey, primaryColor, context)),
                   ),
                 if (players.isNotEmpty)
                   for (int i = 0; i < players.length; i++)
@@ -144,7 +144,7 @@ class _PlayersTransactionState extends State<PlayersTransaction> {
                     padding: const EdgeInsets.all(5),
                     child: Center(
                         child:
-                            circularProgressIndicator(lightGrey, primaryColor)),
+                            circularProgressIndicator(lightGrey, primaryColor, context)),
                   ),
               ],
             ),

@@ -226,7 +226,7 @@ class _EditProfileState extends State<EditProfile> {
                     ),
                   if (userProvider.isLoading)
                     Center(
-                      child: circularProgressIndicator(lightGrey, primaryColor),
+                      child: circularProgressIndicator(lightGrey, primaryColor, context),
                     ),
                 ],
               ),

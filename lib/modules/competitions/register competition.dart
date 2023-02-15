@@ -176,7 +176,7 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                   ),
                 if (competitionProvider.isLoading)
                   Center(
-                    child: circularProgressIndicator(lightGrey, primaryColor),
+                    child: circularProgressIndicator(lightGrey, primaryColor, context),
                   ),
                 const Spacer(),
                 Container(

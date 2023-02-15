@@ -22,7 +22,7 @@ class Messages extends StatelessWidget {
       stream: chatProvider.stream,
       builder: (ctx, snapShot) {
         if (snapShot.connectionState == ConnectionState.waiting) {
-          return Center(child: circularProgressIndicator(lightGrey, primaryColor));
+          return Center(child: circularProgressIndicator(lightGrey, primaryColor, context));
         }
         return ListView.builder(
           physics: const BouncingScrollPhysics(),

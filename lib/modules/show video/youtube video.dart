@@ -330,7 +330,7 @@ class _YoutubeVideoState extends State<YoutubeVideo> {
         },
         fallback: (context) {
           return Center(
-            child: circularProgressIndicator(white, primaryColor),
+            child: circularProgressIndicator(white, primaryColor, context),
           );
         },
       ),

@@ -176,35 +176,6 @@ class CompetitionProvider with ChangeNotifier {
     }
   }
 
-  // void pickVideo() async {
-  //   try {
-  //     var pickedFile = await picker.pickVideo(
-  //       source: ImageSource.gallery,
-  //       maxDuration: const Duration(seconds: 60),
-  //     );
-  //     if (pickedFile != null) {
-  //       pickedVideo = File(pickedFile.path);
-  //       VideoPlayerController videoPlayerController =
-  //           VideoPlayerController.file(File(pickedFile.path));
-  //       await videoPlayerController.initialize();
-  //       if (videoPlayerController.value.duration.inSeconds > 30) {
-  //         pickedFile = null;
-  //         pickedVideo = null;
-  //         notifyListeners();
-  //         showToast(
-  //             text: 'لا يتم اختيار فيديو يتخطى ال 30 ثانيه',
-  //             state: ToastStates.WARNING);
-  //         notifyListeners();
-  //       } else {
-  //         showToast(
-  //             text: 'تم اختيار الفيديو بنجاح', state: ToastStates.SUCCESS);
-  //       }
-  //     }
-  //   } catch (e) {
-  //     showToast(text: e.toString(), state: ToastStates.ERROR);
-  //   }
-  // }
-
   void shareInCompetition(
     String competitionID,
     String nameCompetitor,

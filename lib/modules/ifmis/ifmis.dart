@@ -1,14 +1,13 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:news/modules/ifmis/show%20visit.dart';
+import 'package:news/providers/ifmis%20provider.dart';
 
-import '../../network/cash_helper.dart';
+import 'package:provider/provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
 import '../../shared/const.dart';
 import '../home/home.dart';
-import '../show video/show video.dart';
 
 class IFMIS extends StatefulWidget {
   const IFMIS({Key? key}) : super(key: key);
@@ -18,9 +17,17 @@ class IFMIS extends StatefulWidget {
 }
 
 class _IFMISState extends State<IFMIS> {
+  late IFMISProvider ifmisProvider;
+
+  @override
+  void initState() {
+    Provider.of<IFMISProvider>(context, listen: false).getVisits();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    ifmisProvider = Provider.of(context);
     return Scaffold(
       backgroundColor: white,
       appBar: AppBar(
@@ -64,117 +71,100 @@ class _IFMISState extends State<IFMIS> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('ifmis')
-                  .orderBy('time', descending: true)
-                  .snapshots(),
-              builder: (ctx, snapShot) {
-                if (snapShot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child:
-                          circularProgressIndicator(lightGrey, primaryColor));
-                }
-                final doc = snapShot.data?.docs;
-                if (doc == null || doc.isEmpty) {
-                  return const Center();
-                } else {
-                  return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: doc.length,
-                    itemBuilder: (ctx, index) {
-                      return InkWell(
-                        onTap: () async {
-                          navigateAndFinish(context, ShowVisit(doc[index]['title'],doc[index]['content'], doc[index].id, doc[index]['video']));
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          margin: const EdgeInsets.all(5),
-                          width: sizeFromWidth(context, 1),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: const Color(0xFF7f0e14),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      doc[index]['title'],
-                                      textDirection: TextDirection.rtl,
-                                      style: TextStyle(
-                                        fontSize: sizeFromWidth(context, 30),
-                                        fontWeight: FontWeight.bold,
-                                        color: white,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Container(
-                                    width: sizeFromWidth(context, 7),
-                                    height: sizeFromHeight(context, 12,
-                                        hasAppBar: true),
-                                    decoration: BoxDecoration(
-                                      color: white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      image: DecorationImage(
-                                          image:
-                                              NetworkImage(doc[index]['image']),
-                                          fit: BoxFit.cover),
-                                    ),
-                                  ),
-                                ],
+            child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: ifmisProvider.visitModel.length,
+              itemBuilder: (ctx, index) {
+                return InkWell(
+                  onTap: () {
+                    navigateTo(
+                        context, ShowVisit(ifmisProvider.visitModel[index]));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    margin: const EdgeInsets.all(5),
+                    width: sizeFromWidth(context, 1),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF7f0e14),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                ifmisProvider.visitModel[index].title,
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  fontSize: sizeFromWidth(context, 30),
+                                  fontWeight: FontWeight.bold,
+                                  color: white,
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 5),
+                            Container(
+                              width: sizeFromWidth(context, 7),
+                              height:
+                                  sizeFromHeight(context, 12, hasAppBar: true),
+                              decoration: BoxDecoration(
+                                color: white,
+                                borderRadius: BorderRadius.circular(10),
+                                image: DecorationImage(
+                                    image: NetworkImage(
+                                        ifmisProvider.visitModel[index].image),
+                                    fit: BoxFit.cover),
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                  );
-                }
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
           ),
           Container(
-                  color: primaryColor,
-                  height: sizeFromHeight(context, 10),
-                  width: sizeFromWidth(context, 1),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: CarouselSlider(
-                      items: downBanners.map((e) {
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: NetworkImage(e.image),
-                                    fit: BoxFit.fitWidth,
-                                  ),
-                                ),
-                              ),
+            color: primaryColor,
+            height: sizeFromHeight(context, 10),
+            width: sizeFromWidth(context, 1),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: CarouselSlider(
+                items: downBanners.map((e) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(e.image),
+                              fit: BoxFit.fitWidth,
                             ),
-                          ],
-                        );
-                      }).toList(),
-                      options: CarouselOptions(
-                        height: 250,
-                        initialPage: 0,
-                        enableInfiniteScroll: true,
-                        reverse: false,
-                        autoPlay: true,
-                        viewportFraction: 1,
-                        autoPlayInterval: const Duration(seconds: 3),
-                        autoPlayAnimationDuration: const Duration(seconds: 1),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                        scrollDirection: Axis.horizontal,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    ],
+                  );
+                }).toList(),
+                options: CarouselOptions(
+                  height: 250,
+                  initialPage: 0,
+                  enableInfiniteScroll: true,
+                  reverse: false,
+                  autoPlay: true,
+                  viewportFraction: 1,
+                  autoPlayInterval: const Duration(seconds: 3),
+                  autoPlayAnimationDuration: const Duration(seconds: 1),
+                  autoPlayCurve: Curves.fastOutSlowIn,
+                  scrollDirection: Axis.horizontal,
                 ),
+              ),
+            ),
+          ),
         ],
       ),
     );

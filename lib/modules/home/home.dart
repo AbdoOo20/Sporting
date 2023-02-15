@@ -284,8 +284,7 @@ class _HomeState extends State<Home> {
                     elevation: 10,
                     color: white,
                     child: Marquee(
-                      text:
-                          "للحصول على اخر نسخه من تطبيق الاتحاد الدولي - IFMIS نرجوا تحديث التطبيق من موقع السوق Google Play و Apple Store.",
+                      text: settingModel.newsTicker,
                       style:
                           TextStyle(fontWeight: FontWeight.bold, color: black),
                       scrollAxis: Axis.horizontal,

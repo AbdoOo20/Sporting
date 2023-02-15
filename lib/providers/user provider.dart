@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -44,7 +43,6 @@ class UserProvider with ChangeNotifier {
     );
     Map<String, dynamic> data = json.decode(response.body);
     if (response.statusCode == 201) {
-      showToast(text: data['message'], state: ToastStates.SUCCESS);
       userModel = UserModel.fromJSON(data["data"]);
       CacheHelper.saveData(key: 'token', value: data['token']);
       CacheHelper.saveData(key: 'email', value: userModel.email);
@@ -87,9 +85,6 @@ class UserProvider with ChangeNotifier {
           userName: element['userName'],
           email: element['email'],
           password: element['password'],
-          phone: element['phone'],
-          country: element['country'],
-          type: element['kind'],
         );
         String body = json.encode(userModel.toMap());
         var url =
@@ -105,8 +100,6 @@ class UserProvider with ChangeNotifier {
         Map<String, dynamic> data = json.decode(response.body);
         if (response.statusCode == 201) {
           numberOfRefusedEmail++;
-          log('Email Accepted: $numberOfRefusedEmail');
-          log('Success at index: ${element.id}');
         } else {}
       }
     });
@@ -401,6 +394,42 @@ class UserProvider with ChangeNotifier {
     }
     isLoading = false;
     notifyListeners();
+  }
+
+  void deleteAccount(BuildContext context) async {
+    String token = CacheHelper.getData(key: 'token') ?? '';
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest('POST',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/user/delete/account'));
+    request.fields.addAll({
+      'id': id.toString(),
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      CacheHelper.saveData(key: 'token', value: '');
+      CacheHelper.saveData(key: 'email', value: '');
+      CacheHelper.saveData(key: 'id', value: '');
+      CacheHelper.saveData(key: 'phone', value: '');
+      CacheHelper.saveData(key: 'name', value: '');
+      CacheHelper.saveData(key: 'type', value: '');
+      CacheHelper.saveData(key: 'country', value: '');
+      CacheHelper.saveData(key: 'bio', value: '');
+      CacheHelper.saveData(key: 'image', value: '');
+      CacheHelper.saveData(key: 'facebook', value: '');
+      CacheHelper.saveData(key: 'instagram', value: '');
+      CacheHelper.saveData(key: 'twitter', value: '');
+      CacheHelper.saveData(key: 'snapchat', value: '');
+      CacheHelper.saveData(key: 'tiktok', value: '');
+      showToast(text: 'تم حذف حسابك بنجاح', state: ToastStates.SUCCESS);
+      navigateAndFinish(context, const Home());
+    } else {
+      showToast(text: 'يوجد خطأ', state: ToastStates.ERROR);
+    }
   }
 
   void getNumberOfNotifications() {

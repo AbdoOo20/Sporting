@@ -1,6 +1,7 @@
 import 'package:news/models/authenticate/user%20model.dart';
 
 import '../models/other/banner model.dart';
+import '../models/other/setting model.dart';
 import '../models/statistics/articles.dart';
 import '../models/statistics/player.dart';
 
@@ -54,3 +55,4 @@ List<PlayerModel> otherPlayers = [];
 List<BannerModel> upBanners = [];
 List<BannerModel> downBanners = [];
 late UserModel userModel;
+late SettingModel settingModel;

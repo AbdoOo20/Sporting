@@ -148,7 +148,7 @@ class _LogInState extends State<LogIn> {
                     ),
                   if (userProvider.isLoading)
                     Center(
-                      child: circularProgressIndicator(lightGrey, primaryColor),
+                      child: circularProgressIndicator(lightGrey, primaryColor, context),
                     ),
                 ],
               ),
