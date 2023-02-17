@@ -5,11 +5,13 @@ import 'package:news/modules/matches%20statistics/league.dart';
 import 'package:news/modules/matches%20statistics/matches%20statistics.dart';
 import 'package:news/modules/matches%20statistics/matches%20summary.dart';
 import 'package:news/modules/matches%20statistics/players.dart';
+import '../../providers/matches statistics provider.dart';
 import '../../shared/const.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
 import '../articles/articles.dart';
 import '../home/home.dart';
+import 'package:provider/provider.dart';
 
 class Statistics extends StatefulWidget {
   const Statistics({Key? key}) : super(key: key);
@@ -19,8 +21,18 @@ class Statistics extends StatefulWidget {
 }
 
 class _StatisticsState extends State<Statistics> {
+  late MatchesStatisticsProvider matchesStatisticsProvider;
+
+  @override
+  void initState() {
+    Provider.of<MatchesStatisticsProvider>(context, listen: false).getShow();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    matchesStatisticsProvider = Provider.of(context);
+
     return Scaffold(
       backgroundColor: white,
       appBar: AppBar(
@@ -69,7 +81,12 @@ class _StatisticsState extends State<Statistics> {
               children: [
                 InkWell(
                   onTap: () async {
-                    navigateAndFinish(context, const Articles());
+                    if (matchesStatisticsProvider.show) {
+                      navigateAndFinish(context, const Articles());
+                    } else {
+                      showToast(
+                          text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(5),
@@ -97,8 +114,7 @@ class _StatisticsState extends State<Statistics> {
                         const SizedBox(width: 5),
                         Container(
                           width: sizeFromWidth(context, 7),
-                          height: sizeFromHeight(context, 12,
-                              hasAppBar: true),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
                           decoration: BoxDecoration(
                             color: white,
                             borderRadius: BorderRadius.circular(10),
@@ -113,7 +129,12 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    navigateAndFinish(context, const PlayersTransaction());
+                    if (matchesStatisticsProvider.show) {
+                      navigateAndFinish(context, const PlayersTransaction());
+                    } else {
+                      showToast(
+                          text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(5),
@@ -141,8 +162,7 @@ class _StatisticsState extends State<Statistics> {
                         const SizedBox(width: 5),
                         Container(
                           width: sizeFromWidth(context, 7),
-                          height: sizeFromHeight(context, 12,
-                              hasAppBar: true),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
                           decoration: BoxDecoration(
                             color: white,
                             borderRadius: BorderRadius.circular(10),
@@ -157,7 +177,12 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    navigateAndFinish(context, const MatchesStatistics());
+                    if (matchesStatisticsProvider.show) {
+                      navigateAndFinish(context, const MatchesStatistics());
+                    } else {
+                      showToast(
+                          text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(5),
@@ -185,8 +210,7 @@ class _StatisticsState extends State<Statistics> {
                         const SizedBox(width: 5),
                         Container(
                           width: sizeFromWidth(context, 7),
-                          height: sizeFromHeight(context, 12,
-                              hasAppBar: true),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
                           decoration: BoxDecoration(
                             color: white,
                             borderRadius: BorderRadius.circular(10),
@@ -201,7 +225,12 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    navigateAndFinish(context, const ChampionsScores());
+                    if (matchesStatisticsProvider.show) {
+                      navigateAndFinish(context, const ChampionsScores());
+                    } else {
+                      showToast(
+                          text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(5),
@@ -229,8 +258,7 @@ class _StatisticsState extends State<Statistics> {
                         const SizedBox(width: 5),
                         Container(
                           width: sizeFromWidth(context, 7),
-                          height: sizeFromHeight(context, 12,
-                              hasAppBar: true),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
                           decoration: BoxDecoration(
                             color: white,
                             borderRadius: BorderRadius.circular(10),
@@ -245,7 +273,12 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    navigateAndFinish(context, const League());
+                    if (matchesStatisticsProvider.show) {
+                      navigateAndFinish(context, const League());
+                    } else {
+                      showToast(
+                          text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(5),
@@ -273,8 +306,7 @@ class _StatisticsState extends State<Statistics> {
                         const SizedBox(width: 5),
                         Container(
                           width: sizeFromWidth(context, 7),
-                          height: sizeFromHeight(context, 12,
-                              hasAppBar: true),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
                           decoration: BoxDecoration(
                             color: white,
                             borderRadius: BorderRadius.circular(10),
@@ -289,7 +321,12 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    navigateAndFinish(context, const MatchesSummary());
+                    if (matchesStatisticsProvider.show) {
+                      navigateAndFinish(context, const MatchesSummary());
+                    } else {
+                      showToast(
+                          text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(5),
@@ -317,8 +354,7 @@ class _StatisticsState extends State<Statistics> {
                         const SizedBox(width: 5),
                         Container(
                           width: sizeFromWidth(context, 7),
-                          height: sizeFromHeight(context, 12,
-                              hasAppBar: true),
+                          height: sizeFromHeight(context, 12, hasAppBar: true),
                           decoration: BoxDecoration(
                             color: white,
                             borderRadius: BorderRadius.circular(10),
@@ -335,43 +371,43 @@ class _StatisticsState extends State<Statistics> {
             ),
           ),
           Container(
-                  color: primaryColor,
-                  height: sizeFromHeight(context, 10),
-                  width: sizeFromWidth(context, 1),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: CarouselSlider(
-                      items: downBanners.map((e) {
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: NetworkImage(e.image),
-                                    fit: BoxFit.fitWidth,
-                                  ),
-                                ),
-                              ),
+            color: primaryColor,
+            height: sizeFromHeight(context, 10),
+            width: sizeFromWidth(context, 1),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: CarouselSlider(
+                items: downBanners.map((e) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(e.image),
+                              fit: BoxFit.fitWidth,
                             ),
-                          ],
-                        );
-                      }).toList(),
-                      options: CarouselOptions(
-                        height: 250,
-                        initialPage: 0,
-                        enableInfiniteScroll: true,
-                        reverse: false,
-                        autoPlay: true,
-                        viewportFraction: 1,
-                        autoPlayInterval: const Duration(seconds: 3),
-                        autoPlayAnimationDuration: const Duration(seconds: 1),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                        scrollDirection: Axis.horizontal,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    ],
+                  );
+                }).toList(),
+                options: CarouselOptions(
+                  height: 250,
+                  initialPage: 0,
+                  enableInfiniteScroll: true,
+                  reverse: false,
+                  autoPlay: true,
+                  viewportFraction: 1,
+                  autoPlayInterval: const Duration(seconds: 3),
+                  autoPlayAnimationDuration: const Duration(seconds: 1),
+                  autoPlayCurve: Curves.fastOutSlowIn,
+                  scrollDirection: Axis.horizontal,
                 ),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -16,10 +17,23 @@ class MatchesStatisticsProvider with ChangeNotifier {
   List<TeamModel> teams = [];
   String date = '';
   String getNameOfDay = '';
+  bool show = false;
+
+  void getShow() {
+    FirebaseFirestore.instance
+        .collection('admin')
+        .doc('Qa1ZsddOKeCm0R3mDPNp')
+        .get()
+        .then((value) {
+      show = value['run'];
+      notifyListeners();
+    });
+  }
 
   Future<void> getMatches(String date) async {
     matches = [];
-    String url = "https://api.iffsma-2030.com/TMA/index.php?data=$date&timezone=+03";
+    String url =
+        "https://api.iffsma-2030.com/TMA/index.php?data=$date&timezone=+03";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body);

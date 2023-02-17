@@ -492,7 +492,8 @@ class _HomeState extends State<Home> {
                             10,
                             scaffoldColor,
                             () {
-                              navigateAndFinish(context, const PlayStore());
+                              showToast(
+                                  text: 'جاري العمل عليها', state: ToastStates.SUCCESS);
                             },
                           ),
                           materialWidget(
