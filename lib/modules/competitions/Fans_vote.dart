@@ -359,7 +359,14 @@ class _FansVoteState extends State<FansVote> {
                                       ),
                                       child: IconButton(
                                           onPressed: () {
-                                            if (competitionProvider
+                                            if (competitionProvider.competitors[index].video != '') {
+                                              navigateTo(
+                                                  context,
+                                                  ShowVideo(competitionProvider
+                                                      .competitors[index]
+                                                      .video));
+                                            }
+                                            else if (competitionProvider
                                                 .competitors[index].videoLink
                                                 .contains('youtube')) {
                                               navigateTo(
@@ -375,7 +382,7 @@ class _FansVoteState extends State<FansVote> {
                                                   context,
                                                   ShowVideo(competitionProvider
                                                       .competitors[index]
-                                                      .videoLink));
+                                                      .video));
                                             }
                                           },
                                           icon: Icon(Icons.play_circle,

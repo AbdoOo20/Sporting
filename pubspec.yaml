@@ -63,6 +63,8 @@ dependencies:
       url: https://github.com/Realank/flutter_datetime_picker.git
       ref: master
   jiffy:
+  wc_flutter_share:
+  upgrader:
 
 
   # The following adds the Cupertino Icons font to your application.

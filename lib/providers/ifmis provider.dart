@@ -1,8 +1,10 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:news/models/ifmis/member.dart';
 import 'package:news/models/ifmis/visit%20details%20model.dart';
+import '../models/championship stats/championship stats.dart';
 import '../models/ifmis/visit model.dart';
 import '../shared/Components.dart';
 
@@ -10,6 +12,7 @@ class IFMISProvider with ChangeNotifier {
   bool isLoading = false;
   List<VisitModel> visitModel = [];
   List<MemberModel> memberModel = [];
+  List<ChampionshipStatsModel> championshipStatsModel = [];
   MemberDetailsModel memberDetailsModel = MemberDetailsModel(
     id: 0,
     name: '',
@@ -125,6 +128,30 @@ class IFMISProvider with ChangeNotifier {
     Map<String, dynamic> getData = json.decode(response.body);
     if (response.statusCode == 200) {
       memberDetailsModel = MemberDetailsModel.fromJSON(getData['data']);
+      isLoading = false;
+      notifyListeners();
+    } else {
+      showToast(text: getData['message'], state: ToastStates.ERROR);
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+  void getChampionshipStats() async{
+    championshipStatsModel = [];
+    isLoading = true;
+    var url =
+    Uri.parse('http://iffsma-2030.com/public/api/v1/union-news');
+    var response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+      },
+    );
+    Map<String, dynamic> getData = json.decode(response.body);
+    if (response.statusCode == 200) {
+      getData['data'].forEach((element){
+        championshipStatsModel.add(ChampionshipStatsModel.fromJSON(element));
+      });
       isLoading = false;
       notifyListeners();
     } else {

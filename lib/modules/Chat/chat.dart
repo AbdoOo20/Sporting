@@ -14,10 +14,11 @@ import 'newMessage.dart';
 
 class Chat extends StatefulWidget {
   String chatName;
+  String pageName;
   int chatId;
   int categoryChatNumber;
 
-  Chat(this.chatName, this.chatId, this.categoryChatNumber, {Key? key})
+  Chat(this.chatName, this.pageName,this.chatId, this.categoryChatNumber, {Key? key})
       : super(key: key);
 
   @override
@@ -34,8 +35,11 @@ class _ChatState extends State<Chat> {
         .userLeaveChat(widget.chatId);
     Provider.of<ChatProvider>(context, listen: false)
         .sendMessage(widget.chatId.toString(), '$name\nغادر الدردشة', 'message');
-    if (endFrom == 'inApp') {
+    if (endFrom == 'inApp' && widget.pageName == 'chat') {
       navigateAndFinish(context, ChatsRoom(widget.categoryChatNumber));
+    }
+    if (endFrom == 'inApp' && widget.pageName != 'chat') {
+      navigatePop(context);
     }
   }
 

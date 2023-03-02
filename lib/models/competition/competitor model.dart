@@ -4,6 +4,7 @@ class CompetitorModel {
   late String image;
   late String countryImage;
   late String videoLink;
+  late String video;
   late String score;
   late String center;
   late String numberComments;
@@ -14,6 +15,7 @@ class CompetitorModel {
     required this.image,
     required this.countryImage,
     required this.videoLink,
+    required this.video,
     required this.score,
     required this.center,
     required this.numberComments,
@@ -25,7 +27,8 @@ class CompetitorModel {
       name: json['name'],
       image: json['image'],
       countryImage: json['country_image'],
-      videoLink: json['video_link'],
+      videoLink: json['video_link'] ?? '',
+      video: json['video'] ?? '',
       score: json['total_votes'],
       center: json['center'],
       numberComments: json['number_of_comments'],

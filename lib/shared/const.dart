@@ -55,4 +55,14 @@ List<PlayerModel> otherPlayers = [];
 List<BannerModel> upBanners = [];
 List<BannerModel> downBanners = [];
 late UserModel userModel;
-late SettingModel settingModel;
+SettingModel settingModel = SettingModel(
+  id: 0,
+  newsTicker: '',
+  intellectualProperty: '',
+  membershipTerms: '',
+  privacyPolicy: '',
+  evacuationResponsibilaty: '',
+  vision: '',
+  userCount: 0,
+  value: '',
+);

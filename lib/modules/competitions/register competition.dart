@@ -74,33 +74,30 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                   type: TextInputType.text,
                   validate: (value) {
                     if (value!.isEmpty) {
-                      return 'يجب إدخال اسم المتسابق';
+                      return 'يجب إدخال اسم المتسابق الأول و الأخير';
                     }
                     return null;
                   },
-                  hint: 'أدخل اسم المتسابق',
+                  hint: 'أدخل اسم المتسابق الأول و الأخير فقط',
                 ),
                 textFormField(
                   controller: position,
                   type: TextInputType.text,
                   validate: (value) {
                     if (value!.isEmpty) {
-                      return 'يجب إدخال مركز المتسابق';
+                      return 'يجب إدخال هواية المتسابق من كلمتين فقط';
                     }
                     return null;
                   },
-                  hint: 'أدخل مركز المتسابق',
+                  hint: 'أدخل هواية المتسابق من كلمتين فقط',
                 ),
                 textFormField(
                   controller: videoLink,
                   type: TextInputType.text,
                   validate: (value) {
-                    if (value!.isEmpty) {
-                      return 'يجب إدخال رابط الفيديو';
-                    }
                     return null;
                   },
-                  hint: 'أدخل رابط فيديو',
+                  hint: 'أدخل رابط فيديو يوتيوب فقط',
                 ),
                 Padding(
                   padding:
@@ -139,6 +136,27 @@ class _RegisterCompetitionState extends State<RegisterCompetition> {
                           () {
                             competitionProvider.selectCompetitorImage();
                           },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: textButton(
+                          context,
+                          'اختر فيديو لا يزيد عن 40 ثانيه',
+                          primaryColor,
+                          white,
+                          sizeFromWidth(context, 20),
+                          FontWeight.bold,
+                              () {
+                            competitionProvider.pickVideoCompetitor();
+                              },
                         ),
                       ),
                     ],

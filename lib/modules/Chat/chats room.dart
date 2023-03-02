@@ -139,6 +139,7 @@ class _ChatsRoomState extends State<ChatsRoom> {
                         context,
                         Chat(
                           chatProvider.chats[index].name,
+                          'chat',
                           chatProvider.chats[index].id,
                           widget.categoryChatNumber,
                         ),

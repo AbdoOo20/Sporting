@@ -1,17 +1,13 @@
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:news/models/statistics/articles.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:news/models/games.dart';
 
 import '../models/statistics/player.dart';
 import '../shared/const.dart';
 
 class ArticlesProvider with ChangeNotifier {
-  List<GameModel> games = [];
-  List<GameModel> otherGames = [];
   int articleNumber = 2;
   int gameNumber = 2;
   int playerNumber = 2;
@@ -28,9 +24,7 @@ class ArticlesProvider with ChangeNotifier {
           articles.add(ArticlesModel.fromJSON(element));
           notifyListeners();
         });
-      } catch (e) {
-        log(e.toString());
-      }
+      } catch (e) {}
     } else {
       throw Exception("Failed  to Load Post");
     }
@@ -54,48 +48,7 @@ class ArticlesProvider with ChangeNotifier {
           otherArticles.add(ArticlesModel.fromJSON(element));
           notifyListeners();
         });
-      } catch (e) {
-        log(e.toString());
-      }
-      isLoading = false;
-    } else {
-      throw Exception("Failed  to Load Post");
-    }
-  }
-
-  Future<void> getGames() async {
-    games = [];
-    String url = "https://api.ifmis-2030.icu/Games/1";
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      data.forEach((element) {
-        games.add(GameModel.fromJSON(element));
-        notifyListeners();
-      });
-    } else {
-      throw Exception("Failed  to Load Post");
-    }
-  }
-
-  Future<void> getOtherGames(bool setGame) async {
-    if (setGame) {
-      otherGames = [];
-    }
-    if (!setGame) {
-      isLoading = true;
-      gameNumber++;
-      notifyListeners();
-    }
-    String url = "https://api.ifmis-2030.icu/Games/$gameNumber";
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      data.forEach((element) {
-        notifyListeners();
-        otherGames.add(GameModel.fromJSON(element));
-        notifyListeners();
-      });
+      } catch (e) {}
       isLoading = false;
     } else {
       throw Exception("Failed  to Load Post");
@@ -113,9 +66,7 @@ class ArticlesProvider with ChangeNotifier {
           players.add(PlayerModel.fromJSON(element[0]));
           notifyListeners();
         });
-      } catch (e) {
-        log(e.toString());
-      }
+      } catch (e) {}
     } else {
       throw Exception("Failed  to Load Post");
     }
@@ -139,9 +90,7 @@ class ArticlesProvider with ChangeNotifier {
           otherPlayers.add(PlayerModel.fromJSON(element[0]));
           notifyListeners();
         });
-      } catch (e) {
-        log(e.toString());
-      }
+      } catch (e) {}
       isLoading = false;
     } else {
       throw Exception("Failed  to Load Post");

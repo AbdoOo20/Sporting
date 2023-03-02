@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:news/models/competition/competition%20comment%20model.dart';
 import 'package:news/network/cash_helper.dart';
 import 'package:news/shared/Components.dart';
+import 'package:video_player/video_player.dart';
 
 import '../models/competition/competition model.dart';
 import '../models/competition/competitor model.dart';
@@ -15,11 +16,35 @@ class CompetitionProvider with ChangeNotifier {
   File? pickedImageCountry;
   File? pickedCompetitorImage;
   final picker = ImagePicker();
+  File? pickedVideo;
   String dateAfterEdit = '';
   List<CompetitionModel> competitions = [];
   List<CompetitorModel> competitors = [];
   List<CompetitionCommentModel> comments = [];
   double score = 0.0;
+
+  void pickVideoCompetitor() async {
+    var pickedFile = await picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(seconds: 40),
+    );
+    if (pickedFile != null) {
+      pickedVideo = File(pickedFile.path);
+      VideoPlayerController videoPlayerController =
+          VideoPlayerController.file(File(pickedFile.path));
+      await videoPlayerController.initialize();
+      if (videoPlayerController.value.duration.inSeconds > 40) {
+        pickedFile = null;
+        pickedVideo = null;
+        showToast(
+            text: 'لا يتم ارسال فيديو يتخطى 40 ثانيه',
+            state: ToastStates.WARNING);
+        notifyListeners();
+      } else {
+        showToast(text: 'تم اختيار الفيديو', state: ToastStates.SUCCESS);
+      }
+    }
+  }
 
   Future<void> getCompetitions() async {
     competitions = [];
@@ -186,6 +211,10 @@ class CompetitionProvider with ChangeNotifier {
       showToast(text: 'يجب اختيار صورة الدولة', state: ToastStates.ERROR);
     } else if (pickedCompetitorImage == null) {
       showToast(text: 'يجب اختيار صورة المتسابق', state: ToastStates.ERROR);
+    } else if (videoLink == '' && pickedVideo == null) {
+      showToast(
+          text: 'يجب وضع رابط فيديو أو اختيار فيديو لا يزيد عن 40 ثانيه',
+          state: ToastStates.ERROR);
     } else {
       isLoading = true;
       notifyListeners();
@@ -203,10 +232,11 @@ class CompetitionProvider with ChangeNotifier {
         'video_link': videoLink,
         'competition_id': competitionID
       });
-      request.files.add(await http.MultipartFile.fromPath(
-          'image', pickedCompetitorImage!.path));
-      request.files.add(await http.MultipartFile.fromPath(
-          'country_image', pickedImageCountry!.path));
+      request.files.add(await http.MultipartFile.fromPath('image', pickedCompetitorImage!.path));
+      request.files.add(await http.MultipartFile.fromPath('country_image', pickedImageCountry!.path));
+      if (pickedVideo != null) {
+        request.files.add(await http.MultipartFile.fromPath('video', pickedVideo!.path));
+      }
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       var data = await response.stream.bytesToString();
@@ -215,8 +245,7 @@ class CompetitionProvider with ChangeNotifier {
         isLoading = false;
         pickedImageCountry = null;
         pickedCompetitorImage = null;
-        showToast(
-            text: 'انتظر حتى يتم قبولك بالمسابقة', state: ToastStates.SUCCESS);
+        showToast(text: 'انتظر حتى يتم قبولك بالمسابقة', state: ToastStates.SUCCESS);
         notifyListeners();
       } else {
         isLoading = false;

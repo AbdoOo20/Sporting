@@ -12,6 +12,7 @@ import 'package:news/shared/const.dart';
 import '../models/other/banner model.dart';
 
 class OtherProvider with ChangeNotifier {
+
   Future<void> getBanners() async {
     upBanners = [];
     downBanners = [];
