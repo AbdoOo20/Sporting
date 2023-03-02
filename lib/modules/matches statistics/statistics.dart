@@ -24,12 +24,6 @@ class _StatisticsState extends State<Statistics> {
   late MatchesStatisticsProvider matchesStatisticsProvider;
 
   @override
-  void initState() {
-    Provider.of<MatchesStatisticsProvider>(context, listen: false).getShow();
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     matchesStatisticsProvider = Provider.of(context);
 
@@ -81,7 +75,7 @@ class _StatisticsState extends State<Statistics> {
               children: [
                 InkWell(
                   onTap: () async {
-                    if (matchesStatisticsProvider.show) {
+                    if (settingModel.value == 'open') {
                       navigateAndFinish(context, const Articles());
                     } else {
                       showToast(
@@ -129,7 +123,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    if (matchesStatisticsProvider.show) {
+                    if (settingModel.value == 'open') {
                       navigateAndFinish(context, const PlayersTransaction());
                     } else {
                       showToast(
@@ -177,7 +171,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    if (matchesStatisticsProvider.show) {
+                    if (settingModel.value == 'open') {
                       navigateAndFinish(context, const MatchesStatistics());
                     } else {
                       showToast(
@@ -225,7 +219,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    if (matchesStatisticsProvider.show) {
+                    if (settingModel.value == 'open') {
                       navigateAndFinish(context, const ChampionsScores());
                     } else {
                       showToast(
@@ -273,7 +267,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    if (matchesStatisticsProvider.show) {
+                    if (settingModel.value == 'open') {
                       navigateAndFinish(context, const League());
                     } else {
                       showToast(
@@ -321,7 +315,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 InkWell(
                   onTap: () async {
-                    if (matchesStatisticsProvider.show) {
+                    if (settingModel.value == 'open') {
                       navigateAndFinish(context, const MatchesSummary());
                     } else {
                       showToast(

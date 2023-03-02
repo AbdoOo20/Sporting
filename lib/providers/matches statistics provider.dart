@@ -1,7 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -17,18 +14,6 @@ class MatchesStatisticsProvider with ChangeNotifier {
   List<TeamModel> teams = [];
   String date = '';
   String getNameOfDay = '';
-  bool show = false;
-
-  void getShow() {
-    FirebaseFirestore.instance
-        .collection('admin')
-        .doc('Qa1ZsddOKeCm0R3mDPNp')
-        .get()
-        .then((value) {
-      show = value['run'];
-      notifyListeners();
-    });
-  }
 
   Future<void> getMatches(String date) async {
     matches = [];
@@ -41,9 +26,7 @@ class MatchesStatisticsProvider with ChangeNotifier {
         data.forEach((element) {
           matches.add(MatchesStatisticsModel.fromJSON(element));
         });
-      } catch (e) {
-        log(e.toString());
-      }
+      } catch (e) {}
       notifyListeners();
     } else {
       throw Exception("Failed  to Load Post");
@@ -128,9 +111,7 @@ class MatchesStatisticsProvider with ChangeNotifier {
         data.forEach((element) {
           scores.add(MatchesScoresModel.fromJSON(element));
         });
-      } catch (e) {
-        log(e.toString());
-      }
+      } catch (e) {}
       notifyListeners();
     } else {
       throw Exception("Failed  to Load Post");
@@ -147,9 +128,7 @@ class MatchesStatisticsProvider with ChangeNotifier {
         data.forEach((element) {
           teams.add(TeamModel.fromJSON(element));
         });
-      } catch (e) {
-        log(e.toString());
-      }
+      } catch (e) {}
       notifyListeners();
     } else {
       throw Exception("Failed  to Load Post");

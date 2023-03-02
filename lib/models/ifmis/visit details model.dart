@@ -16,7 +16,7 @@ class VisitDetailsModel {
   VisitDetailsModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     title = json['title'];
-    description = json['description'];
+    description = json['description'].toString().replaceAll('nbsp', '').replaceAll(';', '').replaceAll('&', '');
     video = json['video_link'];
     if (json['images'] != null) {
       images = <VisitImageModel>[];
