@@ -1,14 +1,18 @@
+// ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:news/modules/home/home.dart';
+import 'package:news/modules/programmer/select%20programer.dart';
+import 'package:news/shared/const.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
 
 class Programmer extends StatefulWidget {
-  const Programmer({Key? key}) : super(key: key);
+  String who;
+
+  Programmer(this.who, {Key? key}) : super(key: key);
 
   @override
   State<Programmer> createState() => _ProgrammerState();
@@ -23,37 +27,12 @@ class _ProgrammerState extends State<Programmer> {
         iconTheme: IconThemeData(color: white),
         backgroundColor: primaryColor,
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: EdgeInsets.all(sizeFromWidth(context, 20)),
-              margin: const EdgeInsets.all(5),
-              decoration: const BoxDecoration(
-                color: Color(0xFFbdbdbd),
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage('assets/images/logo 2.jpeg'),
-                ),
-              ),
-            ),
-            Text(
-              'IFMIS ',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: sizeFromWidth(context, 23),
-                color: white,
-              ),
-            ),
-          ],
-        ),
+        title: appBarWidget(context),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.home),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            navigateAndFinish(context, const Home());
+            navigateAndFinish(context, const SelectProgrammer());
           },
         ),
       ),
@@ -74,8 +53,11 @@ class _ProgrammerState extends State<Programmer> {
                       decoration: BoxDecoration(
                         color: primaryColor,
                         borderRadius: BorderRadius.circular(10),
-                        image: const DecorationImage(
-                            image: AssetImage("assets/images/back.jpg"),
+                        image: DecorationImage(
+                            image: widget.who == 'abdo'
+                                ? const AssetImage("assets/images/back.jpg")
+                                : const AssetImage(
+                                    "assets/images/back mahm.jpeg"),
                             fit: BoxFit.cover),
                       ),
                     ),
@@ -88,8 +70,9 @@ class _ProgrammerState extends State<Programmer> {
                         child: CircleAvatar(
                           radius: sizeFromHeight(context, 10),
                           backgroundColor: primaryColor,
-                          backgroundImage:
-                              const AssetImage("assets/images/photo.jpg"),
+                          backgroundImage: widget.who == 'abdo'
+                              ? const AssetImage("assets/images/photo.jpg")
+                              : const AssetImage("assets/images/mahm.jpeg"),
                         ),
                       ),
                     ),
@@ -108,7 +91,9 @@ class _ProgrammerState extends State<Programmer> {
                   child: Column(
                     children: [
                       textWidget(
-                        'المهندس عبدالرحمن عماد مبرمج التطبيق متخصص فى برمجة تطبيقات الجوال للأندرويد و الأيفون و المسئول عن صيانة و متابعة التطبيق و المشرف على الأعطال الفنية.',
+                        widget.who == 'abdo'
+                            ? 'المهندس عبدالرحمن عماد مبرمج التطبيق متخصص فى برمجة تطبيقات الجوال للأندرويد و الأيفون و المسئول عن صيانة و متابعة التطبيق و المشرف على الأعطال الفنية.'
+                            : 'المهندس محمود اسماعيل مطور الواجهه الخلفية للتطبيق ومتخصص فى تصميم وبرمجة المواقع الإلكترونية وقواعد البيانات والمسئول عن الواجهه الخلفية للتطبيق.',
                         TextDirection.rtl,
                         null,
                         white,
@@ -140,8 +125,9 @@ class _ProgrammerState extends State<Programmer> {
                       ),
                       const Spacer(),
                       InkWell(
-                        onTap: () async{
-                          var url = Uri.parse('whatsapp://send?phone=${966561195038}');
+                        onTap: () async {
+                          var url = Uri.parse(
+                              'whatsapp://send?phone=${settingModel.whatsNumber}');
                           await launchUrl(url,
                               mode: LaunchMode.externalNonBrowserApplication);
                         },
@@ -187,10 +173,18 @@ class _ProgrammerState extends State<Programmer> {
                       ),
                       const Spacer(),
                       InkWell(
-                        onTap: () async{
-                          var url = Uri.parse('https://www.linkedin.com/in/abdelrahman-emad-045693204/recent-activity/shares/');
-                          await launchUrl(url,
-                              mode: LaunchMode.externalNonBrowserApplication);
+                        onTap: () async {
+                          var abdo = Uri.parse(
+                              'https://www.linkedin.com/in/abdelrahman-emad-045693204/recent-activity/shares/');
+                          var hoda = Uri.parse(
+                              'https://www.linkedin.com/in/mahmoud-esmail-86a8b1181');
+                          if (widget.who == 'abdo') {
+                            await launchUrl(abdo,
+                                mode: LaunchMode.externalNonBrowserApplication);
+                          } else {
+                            await launchUrl(hoda,
+                                mode: LaunchMode.externalNonBrowserApplication);
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.all(5),
@@ -234,10 +228,18 @@ class _ProgrammerState extends State<Programmer> {
                       ),
                       const Spacer(),
                       InkWell(
-                        onTap: () async{
-                          var url = Uri.parse('https://mostaql.com/u/Abdo_Emad_208/portfolio');
-                          await launchUrl(url,
-                              mode: LaunchMode.externalNonBrowserApplication);
+                        onTap: () async {
+                          var abdo = Uri.parse(
+                              'https://mostaql.com/u/Abdo_Emad_208/portfolio');
+                          var hoda = Uri.parse(
+                              'https://mostaql.com/u/Develper');
+                          if (widget.who == 'abdo') {
+                            await launchUrl(abdo,
+                                mode: LaunchMode.externalNonBrowserApplication);
+                          } else {
+                            await launchUrl(hoda,
+                                mode: LaunchMode.externalNonBrowserApplication);
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.all(5),

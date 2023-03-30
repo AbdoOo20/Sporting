@@ -1,12 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:news/modules/Evacuation%20Responsibilaty/EvacuationResponsibilaty.dart';
 import 'package:news/modules/IntellectualProperty/IntellectualProperty.dart';
-import 'package:news/modules/home/home.dart';
 import 'package:news/modules/membership/membership.dart';
 import 'package:news/modules/policies/policies.dart';
-import 'package:news/modules/programmer/programmer.dart';
+import 'package:news/modules/programmer/select%20programer.dart';
 import 'package:news/providers/user%20provider.dart';
+import 'package:news/shared/const.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,7 +17,6 @@ import '../Authentication/log in.dart';
 import '../Authentication/sign up.dart';
 import '../Vision, mission and goals/Vision, mission and goals.dart';
 import '../members/members.dart';
-import '../notifications/notifications.dart';
 import '../profile/profile.dart';
 
 class DrawerSide extends StatefulWidget {
@@ -29,7 +28,7 @@ class DrawerSide extends StatefulWidget {
 
 class _DrawerSideState extends State<DrawerSide> {
   late UserProvider userProvider;
-  var url = Uri.parse('whatsapp://send?phone=${966561195038}');
+  var url = Uri.parse('whatsapp://send?phone=${settingModel.whatsNumber}');
 
   showAlertDialog(BuildContext context) {
     Widget cancelButton = textButton(
@@ -91,7 +90,6 @@ class _DrawerSideState extends State<DrawerSide> {
   @override
   Widget build(BuildContext context) {
     userProvider = Provider.of(context);
-
     return SizedBox(
       height: sizeFromHeight(context, 1),
       width: sizeFromWidth(context, 1.7),
@@ -227,10 +225,10 @@ class _DrawerSideState extends State<DrawerSide> {
               ),
               buildListTile(
                 context,
-                'مبرمج التطبيق',
-                Icons.code,
+                'الفريق البرمجي',
+                Icons.groups,
                     () async {
-                  navigateAndFinish(context, const Programmer());
+                  navigateAndFinish(context, const SelectProgrammer());
                 },
               ),
               buildListTile(

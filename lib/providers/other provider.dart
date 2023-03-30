@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,6 +52,17 @@ class OtherProvider with ChangeNotifier {
       showToast(text: getData['message'], state: ToastStates.ERROR);
       notifyListeners();
     }
+  }
+
+  void addVisitor() async {
+    var headers = {
+      'Accept': 'application/json'
+    };
+    var request = http.MultipartRequest('POST', Uri.parse('http://iffsma-2030.com/public/api/v1/add/visitor'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {}
+    else {}
   }
 
   Future<void> sendVideoComment(String title, String comment) async {

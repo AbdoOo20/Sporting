@@ -2,11 +2,90 @@
 
 import 'dart:io';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'Style.dart';
+import 'const.dart';
+
+Widget appBarWidget(BuildContext context) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        'IFMIS',
+        textAlign: TextAlign.end,
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: sizeFromWidth(context, 23),
+          color: white,
+        ),
+      ),
+      Container(
+        height: sizeFromHeight(context, 15, hasAppBar: true),
+        width: sizeFromWidth(context, 6),
+        decoration: const BoxDecoration(
+          color: Color(0xFFbdbdbd),
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: AssetImage('assets/images/logo 2.jpeg'),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget bottomScaffoldWidget(BuildContext context) {
+  return Container(
+    color: primaryColor,
+    height: sizeFromHeight(context, 10),
+    width: sizeFromWidth(context, 1),
+    child: Directionality(
+      textDirection: TextDirection.rtl,
+      child: CarouselSlider(
+        items: downBanners.map((e) {
+          return InkWell(
+            onTap: () async {
+              var url = Uri.parse(e.link);
+              await launchUrl(url);
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(e.image),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        options: CarouselOptions(
+          height: sizeFromHeight(context, 5),
+          initialPage: 0,
+          enableInfiniteScroll: true,
+          reverse: false,
+          autoPlay: true,
+          viewportFraction: 1,
+          autoPlayInterval: const Duration(seconds: 3),
+          autoPlayAnimationDuration: const Duration(seconds: 1),
+          autoPlayCurve: Curves.fastOutSlowIn,
+          scrollDirection: Axis.horizontal,
+        ),
+      ),
+    ),
+  );
+}
 
 void navigateTo(context, widget) {
   Navigator.push(
@@ -50,7 +129,7 @@ Widget divider(double start, double end, Color color) {
 StatefulWidget circularProgressIndicator(
   Color backgroundColor,
   Color colorWidget,
-    BuildContext context,
+  BuildContext context,
 ) {
   if (Platform.isAndroid) {
     return CircularProgressIndicator(

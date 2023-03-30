@@ -64,5 +64,11 @@ SettingModel settingModel = SettingModel(
   evacuationResponsibilaty: '',
   vision: '',
   userCount: 0,
+  visitors: 0,
   value: '',
+  whatsNumber: '',
 );
+
+
+
+

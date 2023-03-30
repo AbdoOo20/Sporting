@@ -1,99 +1,675 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:news/models/store/comment.dart';
+import 'package:news/models/store/store.dart';
+import 'package:news/modules/play_store/play%20store.dart';
+import 'package:news/network/cash_helper.dart';
+import 'package:file_picker/file_picker.dart';
+import '../models/store/category.dart';
+import '../models/store/favourite product.dart';
+import '../models/store/product.dart';
 import '../shared/Components.dart';
 
 class StoreProvider with ChangeNotifier {
   bool isLoading = false;
   var picker = ImagePicker();
-  List<File> pickedImage = [];
-  List links = [];
+  File? storeImage;
+  File? paperStoreFile;
+  List<File> productImage = [];
+  List<File> storeBanners = [];
+  List<StoreModel> stores = [];
+  List<CategoryModel> categories = [];
+  List<ProductModel> products = [];
+  List<ProductModel> categoriesProducts = [];
+  List<FavouriteModel> favourites = [];
+  List<ProductComment> productComment = [];
+  List productSize = [];
+  List productColors = [];
+  int selectedCategoryID = 0;
+  TextEditingController search = TextEditingController();
+  double ratingBar = 0.0;
 
-  void pickImage() async {
-    final pickedImageFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedImageFile != null) {
-      pickedImage.add(File(pickedImageFile.path));
-      notifyListeners();
-    }
-    if (pickedImage.isNotEmpty) {
-      showToast(
-          text: 'تم إختيار الصورة بنجاح و يمكنك اختيار العديد من الصور',
-          state: ToastStates.SUCCESS);
-    }
-  }
-
-  Future<void> createChampionItem(String championName, String link) async {
-    dynamic imageName = '';
-    dynamic url = '';
-    if (pickedImage.isEmpty) {
-      showToast(text: 'يجب إختيار بعض الصور', state: ToastStates.ERROR);
-    }
-    if (pickedImage.isNotEmpty) {
-      isLoading = true;
-      notifyListeners();
-
-      await FirebaseFirestore.instance.collection('store').add({
-        'name': championName,
-        'time': Timestamp.now(),
-        'image': url,
-        'imageName': '',
-        'link': link,
-        'storeId': '',
-        'state': 'reject'
-      }).then((value) async {
-        FirebaseFirestore.instance.collection('store').doc(value.id).update({
-          'storeId': value.id,
-        });
-        List<String> urlList = [];
-        for (var image in pickedImage) {
-          imageName = Uri.file(image.path).pathSegments.last;
-          final ref = FirebaseStorage.instance
-              .ref()
-              .child('store image')
-              .child(value.id)
-              .child(imageName);
-          await ref.putFile(image);
-          url = await ref.getDownloadURL();
-          urlList.add(url);
-          if (pickedImage[0] == image) {
-            FirebaseFirestore.instance
-                .collection('store')
-                .doc(value.id)
-                .update({'image': url});
-          }
-          notifyListeners();
+  void pickStoreBannersImages() async {
+    storeBanners = [];
+    await picker.pickMultiImage().then((value) {
+      if (value.length < 9) {
+        for (var element in value) {
+          storeBanners.add(File(element.path));
         }
-      });
-
-      pickedImage = [];
-      isLoading = false;
-      showToast(
-          text: 'تم إنشاء الأيفونة بنجاح انتظر القبول من المشرف',
-          state: ToastStates.SUCCESS);
-      notifyListeners();
-    }
-  }
-
-  void getImages(String storeID) {
-    links = [];
-    FirebaseStorage.instance
-        .ref()
-        .child('store image')
-        .child(storeID)
-        .list()
-        .then((value) {
-      for (var element in value.items) {
-        element.getDownloadURL().then((value) {
-          links.add(value);
-          notifyListeners();
-        });
+        notifyListeners();
+      } else {
+        storeBanners = [];
         notifyListeners();
       }
-      notifyListeners();
     });
+    if (storeBanners.isNotEmpty) {
+      showToast(text: 'تم إختيار الصور', state: ToastStates.SUCCESS);
+    } else {
+      showToast(
+          text: 'يجب اختيار عدد من الصور أقل من 9', state: ToastStates.ERROR);
+    }
+  }
+
+  void searchAboutStore() {
+    List<StoreModel> searchStores = [];
+    searchStores = stores.where((element) {
+      var searchItem = element.name.toLowerCase();
+      return searchItem.contains(search.text.toLowerCase());
+    }).toList();
+    stores = [];
+    stores = searchStores;
+    notifyListeners();
+  }
+
+  void editProductSize(String size) {
+    if (productSize.contains(size)) {
+      productSize.remove(size);
+    } else {
+      productSize.add(size);
+    }
+    notifyListeners();
+  }
+
+  void editProductColors(String color) {
+    if (productColors.contains(color)) {
+      productColors.remove(color);
+    } else {
+      productColors.add(color);
+    }
+    notifyListeners();
+  }
+
+  void setCategoryID(value) {
+    categories.any((element) {
+      if (element.name == value) {
+        selectedCategoryID = element.id;
+        return true;
+      }
+      return false;
+    });
+    notifyListeners();
+  }
+
+  String getCategoryID() {
+    String name = '';
+    categories.any((element) {
+      if (element.id == selectedCategoryID) {
+        name = element.name;
+        return true;
+      }
+      return false;
+    });
+    return name;
+  }
+
+  void pickProductImages() async {
+    productImage = [];
+    await picker.pickMultiImage().then((value) {
+      if (value.length <= 3) {
+        for (var element in value) {
+          productImage.add(File(element.path));
+        }
+        notifyListeners();
+      } else {
+        productImage = [];
+        notifyListeners();
+      }
+    });
+    if (productImage.isNotEmpty) {
+      showToast(text: 'تم إختيار الصور', state: ToastStates.SUCCESS);
+    } else {
+      showToast(
+          text: 'يجب اختيار عدد من الصور أقل من 4', state: ToastStates.ERROR);
+    }
+  }
+
+  void pickStoreImage() async {
+    final pickedImageFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedImageFile != null) {
+      storeImage = File(pickedImageFile.path);
+      notifyListeners();
+    }
+    if (storeImage != null) {
+      showToast(
+          text: 'تم إختيار صورة المتجر بنجاح', state: ToastStates.SUCCESS);
+    }
+  }
+
+  void pickPaperStoreFile() async {
+    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+    if (result != null) {
+      paperStoreFile = File(result.files.first.path.toString());
+      showToast(
+          text: 'تم إختيار ملف السجل التجارى بنجاح',
+          state: ToastStates.SUCCESS);
+    }
+    notifyListeners();
+  }
+
+  Future<void> createStore(
+    String name,
+    String description,
+    String address,
+    String link,
+    String ownerPhone,
+    String storePhone,
+    String startDate,
+    String endDate,
+    BuildContext context,
+  ) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    if (storeImage == null || paperStoreFile == null) {
+      showToast(
+          text: 'يجب إختيار صورة المتجر و ملف السجل التجارى للمتجر',
+          state: ToastStates.ERROR);
+    } else {
+      isLoading = true;
+      notifyListeners();
+      var headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token'
+      };
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('http://iffsma-2030.com/public/api/v1/add/store'));
+      request.fields.addAll({
+        'name': name,
+        'lat_lang_link': link,
+        'phone_store_owner': ownerPhone,
+        'phone_store': storePhone,
+        'start_work_hours': startDate,
+        'end_work_hours': endDate,
+        'user_id': id.toString(),
+        'store_address': address,
+        'description': description,
+      });
+      request.files.add(await http.MultipartFile.fromPath(
+          'commercial_register', paperStoreFile!.path));
+      request.files.add(
+          await http.MultipartFile.fromPath('store_image', storeImage!.path));
+      if (storeBanners.isNotEmpty) {
+        for (var element in storeBanners) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'store_banners[]', element.path));
+        }
+      }
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      var data = await response.stream.bytesToString();
+      final decodedData = json.decode(data);
+      if (response.statusCode == 200) {
+        showToast(
+            text: 'تم إنشاء المتجر إنتظر القبول من المسئول',
+            state: ToastStates.SUCCESS);
+        paperStoreFile = null;
+        storeImage = null;
+        isLoading = false;
+        navigatePop(context);
+        notifyListeners();
+      } else {
+        showToast(text: decodedData['message'], state: ToastStates.ERROR);
+        paperStoreFile = null;
+        storeImage = null;
+        isLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  void updateStoreData(
+    String name,
+    String storeID,
+    String description,
+    String address,
+    String link,
+    String ownerPhone,
+    String storePhone,
+    String startDate,
+    String endDate,
+    int bannerLength,
+    BuildContext context,
+  ) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest(
+        'POST', Uri.parse('http://iffsma-2030.com/public/api/v1/store/update'));
+    request.fields.addAll({
+      'store_id': storeID,
+      'user_id': id.toString(),
+      'name': name,
+      'lat_lang_link': link,
+      'phone_store_owner': ownerPhone,
+      'phone_store': storePhone,
+      'start_work_hours': startDate,
+      'end_work_hours': endDate,
+      'store_address': address,
+      'description': description,
+    });
+    if (storeImage != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('store_image', storeImage!.path));
+    }
+    if (storeBanners.isNotEmpty && (bannerLength + storeBanners.length < 9)) {
+      for (var element in storeBanners) {
+        request.files.add(
+            await http.MultipartFile.fromPath('store_banners[]', element.path));
+      }
+    }
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      if (storeBanners.isNotEmpty &&
+          (bannerLength + storeBanners.length >= 9)) {
+        showToast(
+            text: 'عدد صور الاعلانات يجب ان يكون اقل من 9',
+            state: ToastStates.ERROR);
+      } else {
+        showToast(text: 'تم التعديل بنجاح', state: ToastStates.SUCCESS);
+      }
+      storeImage = null;
+      isLoading = false;
+      storeBanners = [];
+      navigateAndFinish(context, const PlayStore());
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+      storeImage = null;
+      isLoading = false;
+      storeBanners = [];
+      notifyListeners();
+    }
+  }
+
+  void getStores() async {
+    stores = [];
+    var token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'GET', Uri.parse('http://iffsma-2030.com/public/api/v1/get/stores'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      decodedData['data'].forEach((element) {
+        stores.add(StoreModel.fromJson(element));
+      });
+      stores.sort((a, b) => a.storeNumber.compareTo(b.storeNumber));
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  Future<void> addCategoriesInStore(String categoryName, String storeID) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest(
+        'POST', Uri.parse('http://iffsma-2030.com/public/api/v1/add/category'));
+    request.fields.addAll({
+      'name': categoryName,
+      'store_model_id': storeID,
+      'user_id': id.toString(),
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم إنشاء التصنيف', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  Future<void> createProduct(
+    String storeID,
+    String name,
+    String description,
+    String price,
+    String discount,
+    BuildContext context,
+  ) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    if (productImage.isEmpty) {
+      showToast(
+          text: 'يجب اختيار عدد من الصور أقل من 4', state: ToastStates.ERROR);
+    } else if (productSize.isEmpty) {
+      showToast(text: 'يجب اختيار أحجام المنتج', state: ToastStates.ERROR);
+    } else if (productColors.isEmpty) {
+      showToast(text: 'يجب اختيار ألوان المنتج', state: ToastStates.ERROR);
+    } else if (selectedCategoryID == -1) {
+      showToast(text: 'يجب تحديد تصنيف المنتج', state: ToastStates.ERROR);
+    } else {
+      isLoading = true;
+      notifyListeners();
+      var headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token'
+      };
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/create/products/store'),
+      );
+      request.fields.addAll({
+        'name': name,
+        'description': description,
+        'price': price,
+        'store_category_id': selectedCategoryID.toString(),
+        'store_id': storeID,
+        'user_id': id.toString(),
+        'colors[]': productColors.toString(),
+        'sizes[]': productSize.toString(),
+        'discount': discount,
+      });
+      for (var element in productImage) {
+        request.files
+            .add(await http.MultipartFile.fromPath('images[]', element.path));
+      }
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      var data = await response.stream.bytesToString();
+      final decodedData = json.decode(data);
+      if (response.statusCode == 200) {
+        showToast(text: 'تم إنشاء المنتج', state: ToastStates.SUCCESS);
+        isLoading = false;
+        selectedCategoryID = -1;
+        notifyListeners();
+      } else {
+        showToast(text: decodedData['message'], state: ToastStates.ERROR);
+        isLoading = false;
+        selectedCategoryID = -1;
+        notifyListeners();
+      }
+    }
+  }
+
+  void getStoreCategories(String storeID, bool addAll) async {
+    categories = [];
+    if (addAll) {
+      categories.add(CategoryModel(id: 0, name: 'الكل', storeID: storeID));
+    }
+    var token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request('GET',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/store/categories'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      decodedData['data'].forEach((element) {
+        if (element['store_model_id'] == storeID) {
+          categories.add(CategoryModel.fromJson(element));
+        }
+      });
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  void getProducts(int storeID) async {
+    products = [];
+    categoriesProducts = [];
+    var token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/category/products/$storeID'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      decodedData['data'].forEach((element) {
+        products.add(ProductModel.fromJson(element));
+      });
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  void getProductsByCategoryID(int index) {
+    selectedCategoryID = index;
+    List<ProductModel> searchProducts = [];
+    searchProducts = products.where((element) {
+      var searchItem = selectedCategoryID.toString();
+      return searchItem == element.storeCategoryId;
+    }).toList();
+    categoriesProducts = [];
+    categoriesProducts = searchProducts;
+    notifyListeners();
+  }
+
+  Future<void> deleteCategory(String categoryID) async {
+    var token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'DELETE',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/delete/category/$categoryID'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم حذف التصنيف بنجاح', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  Future<void> addProductToFavourite(String productID) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest(
+        'POST', Uri.parse('http://iffsma-2030.com/public/api/v1/user/add/fav'));
+    request.fields.addAll({
+      'user_id': id.toString(),
+      'product_id': productID,
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تمت الإضافة إلى المفضلة', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  Future<void> deleteProductFromFavourite(String productID) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'DELETE',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/delete/product/fav?user_id=$id&product_id=$productID'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم الحذف من المفضلة', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  void getProductFavourite() async {
+    favourites = [];
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    isLoading = true;
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/user/get/fav?user_id=$id'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      decodedData['data'].forEach((element) {
+        favourites.add(FavouriteModel.fromJson(element));
+      });
+      isLoading = false;
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteProduct(String storeID, String productID) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'DELETE',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/delete/product/cart?id=$productID&user_id=$id&store_id=$storeID'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم الحذف بنجاح', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  Future<void> addProductComment(
+    String productID,
+    String comment,
+  ) async {
+    var token = CacheHelper.getData(key: 'token');
+    var id = CacheHelper.getData(key: 'id');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest('POST',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/user/add/rating'));
+    request.fields.addAll({
+      'user_id': id.toString(),
+      'product_id': productID,
+      'rate': ratingBar.toString(),
+      'comment': comment,
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم التعليق بنجاح', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  void changeRating(double value) {
+    ratingBar = value;
+    notifyListeners();
+  }
+
+  Future<void> getProductComments(String productID) async {
+    productComment = [];
+    var token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.MultipartRequest(
+        'GET',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/product/comments/$productID'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      decodedData['data'].forEach((element) {
+        productComment.add(ProductComment.fromJson(element));
+      });
+      notifyListeners();
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
+  }
+
+  Future<void> deleteBanners(
+    String storeId,
+    String bannerId,
+  ) async {
+    var token = CacheHelper.getData(key: 'token');
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'DELETE',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/delete/banner?banner_id=$bannerId&store_id=$storeId'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      showToast(text: 'تم الحذف بنجاح', state: ToastStates.SUCCESS);
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+    }
   }
 }

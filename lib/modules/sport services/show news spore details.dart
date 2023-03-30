@@ -1,5 +1,4 @@
 // ignore_for_file: must_be_immutable
-
 import 'dart:io';
 
 import 'package:carousel_slider/carousel_slider.dart';
@@ -54,36 +53,11 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
               iconTheme: IconThemeData(color: white),
               backgroundColor: primaryColor,
               elevation: 0,
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: sizeFromHeight(context, 15, hasAppBar: true),
-                    width: sizeFromWidth(context, 5),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFbdbdbd),
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/logo 2.jpeg'),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'IFMIS',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: sizeFromWidth(context, 23),
-                      color: white,
-                    ),
-                  ),
-                ],
-              ),
+              title: appBarWidget(context),
               centerTitle: true,
             ),
       body: ConditionalBuilder(
-        condition: sportServicesProvider.isLoading == false,
+        condition: !sportServicesProvider.isLoading,
         builder: (context) {
           return Column(
             children: [
@@ -104,6 +78,7 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
+                            if(widget.sportServicesNewsModel.publisherName != '')
                             textWidget(
                               'اسم الناشر: ${widget.sportServicesNewsModel.publisherName}',
                               TextDirection.rtl,
@@ -112,6 +87,7 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
                               sizeFromWidth(context, 25),
                               FontWeight.bold,
                             ),
+                            if(widget.sportServicesNewsModel.tellAboutYourself != '')
                             textWidget(
                               'نبذه عن الناشر: ${widget.sportServicesNewsModel.tellAboutYourself}',
                               TextDirection.rtl,
@@ -193,19 +169,20 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            IconButton(
+                            if(widget.sportServicesNewsModel.user != null)
+                              IconButton(
                               onPressed: () {
                                 Provider.of<UserProvider>(context,
                                         listen: false)
                                     .getDataOtherUser(
                                         context,
-                                        widget.sportServicesNewsModel.user.id
+                                        widget.sportServicesNewsModel.user!.id
                                             .toString())
                                     .then((value) {
                                   navigateTo(
                                       context,
                                       Profile(
-                                          widget.sportServicesNewsModel.user.id
+                                          widget.sportServicesNewsModel.user!.id
                                               .toString(),
                                           'chat',
                                           false,
@@ -216,19 +193,19 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
                               icon: Icon(Icons.person_outline_rounded,
                                   color: white),
                             ),
-                            textWidget(
+                            Expanded(child: textWidget(
                               widget.sportServicesNewsModel.title,
-                              null,
+                              TextDirection.rtl,
                               null,
                               white,
                               sizeFromWidth(context, 20),
                               FontWeight.bold,
-                            ),
+                            ),),
                           ],
                         ),
                       ),
                     if (!chatProvider
-                        .youtubePlayerController.value.isFullScreen)
+                        .youtubePlayerController.value.isFullScreen && widget.sportServicesNewsModel.description != '')
                       Container(
                         margin: const EdgeInsets.all(5),
                         padding: const EdgeInsets.all(5),
@@ -279,18 +256,18 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
                       ),
                     SizedBox(height: sizeFromHeight(context, 90)),
                     if (!chatProvider
-                            .youtubePlayerController.value.isFullScreen &&
-                        widget.sportServicesNewsModel.user.chat != null)
+                            .youtubePlayerController.value.isFullScreen && widget.sportServicesNewsModel.user != null &&
+                        widget.sportServicesNewsModel.user!.chat != null)
                       InkWell(
                         onTap: () {
                           navigateTo(
                             context,
                             Chat(
-                                widget.sportServicesNewsModel.user.chat!.name,
+                                widget.sportServicesNewsModel.user!.chat!.name,
                                 'sport services',
-                                widget.sportServicesNewsModel.user.chat!.id,
+                                widget.sportServicesNewsModel.user!.chat!.id,
                                 int.parse(widget.sportServicesNewsModel.user
-                                    .chat!.categoryID)),
+                                    !.chat!.categoryID)),
                           );
                         },
                         child: Container(
@@ -312,7 +289,7 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
                                 FontWeight.bold,
                               ),
                               textWidget(
-                                '(هذا الخبر على مسئولية الناشر)',
+                                'هذا الخبر على مسئولية الناشر',
                                 null,
                                 null,
                                 white,
@@ -399,44 +376,7 @@ class _ShowNewsSporeDetailsState extends State<ShowNewsSporeDetails> {
               ),
               if (!chatProvider.youtubePlayerController.value.isFullScreen &&
                   widget.sportServicesNewsModel.videoLink.contains('youtu'))
-                Container(
-                  color: primaryColor,
-                  height: sizeFromHeight(context, 10),
-                  width: sizeFromWidth(context, 1),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: CarouselSlider(
-                      items: downBanners.map((e) {
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: NetworkImage(e.image),
-                                    fit: BoxFit.fitWidth,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                      options: CarouselOptions(
-                        height: 250,
-                        initialPage: 0,
-                        enableInfiniteScroll: true,
-                        reverse: false,
-                        autoPlay: true,
-                        viewportFraction: 1,
-                        autoPlayInterval: const Duration(seconds: 3),
-                        autoPlayAnimationDuration: const Duration(seconds: 1),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                        scrollDirection: Axis.horizontal,
-                      ),
-                    ),
-                  ),
-                ),
+                bottomScaffoldWidget(context),
             ],
           );
         },

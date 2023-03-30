@@ -123,44 +123,7 @@ class _ChatState extends State<Chat> {
             children: [
               Expanded(child: Messages(widget.chatId.toString())),
               NewMessages(widget.chatId.toString()),
-              Container(
-                color: primaryColor,
-                height: sizeFromHeight(context, 10),
-                width: sizeFromWidth(context, 1),
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: CarouselSlider(
-                    items: downBanners.map((e) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: NetworkImage(e.image),
-                                  fit: BoxFit.fitWidth,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                    options: CarouselOptions(
-                      height: 250,
-                      initialPage: 0,
-                      enableInfiniteScroll: true,
-                      reverse: false,
-                      autoPlay: true,
-                      viewportFraction: 1,
-                      autoPlayInterval: const Duration(seconds: 3),
-                      autoPlayAnimationDuration: const Duration(seconds: 1),
-                      autoPlayCurve: Curves.fastOutSlowIn,
-                      scrollDirection: Axis.horizontal,
-                    ),
-                  ),
-                ),
-              ),
+              bottomScaffoldWidget(context),
             ],
           ),
         ),

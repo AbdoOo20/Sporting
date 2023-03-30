@@ -21,6 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void initState() {
+    Provider.of<OtherProvider>(context, listen: false).addVisitor();
     Provider.of<OtherProvider>(context, listen: false).getBanners();
     Provider.of<OtherProvider>(context, listen: false).getSettings();
     Provider.of<ArticlesProvider>(context, listen: false).getPlayers();

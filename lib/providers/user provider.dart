@@ -432,6 +432,86 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  void checkExistAccount(
+    String email,
+    String password,
+    String confirmPassword,
+    String name,
+  ) async {
+    isLoading = true;
+    notifyListeners();
+    var headers = {
+      'Accept': 'application/json',
+    };
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'http://iffsma-2030.com/public/api/v1/user/reset/password/$email'));
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200) {
+      if (decodedData['message'] == 'البريد الالكترونى غير موجود') {
+        showToast(
+            text: 'البريد الالكترونى غير موجود', state: ToastStates.WARNING);
+        isLoading = false;
+        notifyListeners();
+      } else {
+        updatePassword(
+          email,
+          password,
+          confirmPassword,
+          name,
+        );
+        isLoading = false;
+        notifyListeners();
+      }
+    } else {
+      showToast(text: decodedData['message'], state: ToastStates.ERROR);
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void updatePassword(
+    String email,
+    String password,
+    String confirmPassword,
+    String name,
+  ) async {
+    var headers = {
+      'Accept': 'application/json',
+    };
+    var request = http.MultipartRequest('POST',
+        Uri.parse('http://iffsma-2030.com/public/api/v1/user/update/password'));
+    request.fields.addAll({
+      'email': email,
+      'new_password': password,
+      'password_confirmation': confirmPassword,
+      'name': name,
+    });
+    request.headers.addAll(headers);
+    http.StreamedResponse response = await request.send();
+    var data = await response.stream.bytesToString();
+    final decodedData = json.decode(data);
+    if (response.statusCode == 200 && decodedData['status']) {
+      showToast(text: 'تم تحديث كلمة السر بنجاح', state: ToastStates.SUCCESS);
+      isLoading = false;
+      notifyListeners();
+    } else {
+      if (decodedData['message'] == 'هناك خطأ فى البياات') {
+        showToast(
+            text: 'هذا ليس حسابك, خطأ فى اسم المستخدم',
+            state: ToastStates.ERROR);
+      } else {
+        showToast(text: decodedData['message'], state: ToastStates.ERROR);
+      }
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void getNumberOfNotifications() {
     numberOfNotifications = 0;
     var id = FirebaseAuth.instance.currentUser!.uid;

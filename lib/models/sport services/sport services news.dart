@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class SportServicesNewsModel {
   late int id;
   late String title;
@@ -11,7 +13,7 @@ class SportServicesNewsModel {
   late String publisherCountryImage;
   late String date;
   late String publisherCountry;
-  late User user;
+  User? user;
   late List<ImageServices> images;
 
   SportServicesNewsModel({
@@ -33,18 +35,24 @@ class SportServicesNewsModel {
 
   SportServicesNewsModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    title = json['title'];
-    description = json['description'];
+    title = json['title'] ?? '';
+    description = json['description']
+            .toString()
+            .replaceAll('ndash', '')
+            .replaceAll(';', '')
+            .replaceAll('&', '')
+            .replaceAll('nbsp', '') ??
+        '';
     videoLink = json['video_link'] ?? '';
-    sportServiceCategoryId = json['sport_service_category_id'];
-    status = json['status'];
-    tellAboutYourself = json['tell_about_yourself'];
-    publisherName = json['publisher_name'];
-    publisherAge = json['publisher_age'];
-    date = json['created_at'];
+    sportServiceCategoryId = json['sport_service_category_id'] ?? '';
+    status = json['status'] ?? '';
+    tellAboutYourself = json['tell_about_yourself'] ?? '';
+    publisherName = json['publisher_name'] ?? '';
+    publisherAge = json['publisher_age'] ?? '';
+    date = json['created_at'] ?? '';
     publisherCountryImage = json['publisher_country_image'] ?? '';
     publisherCountry = json['publisher_country'] ?? '';
-    user = (json['user'] != null ? User.fromJson(json['user']) : null)!;
+    user = json['user'] != null ? User.fromJson(json['user']) : null;
     if (json['media'] != null) {
       images = <ImageServices>[];
       json['media'].forEach((v) {

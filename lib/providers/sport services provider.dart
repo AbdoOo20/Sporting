@@ -10,6 +10,7 @@ import 'package:news/network/cash_helper.dart';
 import '../models/sport services/sport services comments.dart';
 import '../models/sport services/sport services news.dart';
 import '../shared/Components.dart';
+import 'dart:developer';
 
 class SportServicesProvider with ChangeNotifier {
   bool isLoading = false;
@@ -74,7 +75,8 @@ class SportServicesProvider with ChangeNotifier {
     Map<String, dynamic> getData = json.decode(response.body);
     if (response.statusCode == 200) {
       getData['data'].forEach((element) {
-        sportServicesCategoriesModel.add(SportServicesCategoriesModel.fromJSON(element));
+        sportServicesCategoriesModel
+            .add(SportServicesCategoriesModel.fromJSON(element));
       });
       isLoading = false;
       notifyListeners();
@@ -85,9 +87,10 @@ class SportServicesProvider with ChangeNotifier {
     }
   }
 
-  void getSportServicesNews(String id) async {
+  Future<void> getSportServicesNews(String id) async {
     sportServicesNewsModel = [];
-    var url = Uri.parse('http://iffsma-2030.com/public/api/v1/sport_service_categories/$id');
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/sport_service_categories/$id');
     var response = await http.get(
       url,
       headers: {
@@ -105,7 +108,7 @@ class SportServicesProvider with ChangeNotifier {
     }
   }
 
-  void addNews(
+  Future<void> addNews(
     String title,
     String description,
     String link,
@@ -192,8 +195,8 @@ class SportServicesProvider with ChangeNotifier {
   Future<void> addComment(int serviceID, String comment) async {
     String token = CacheHelper.getData(key: 'token') ?? '';
     var userID = CacheHelper.getData(key: 'id') ?? '';
-    var url =
-        Uri.parse('http://iffsma-2030.com/public/api/v1/sport_service/addComment');
+    var url = Uri.parse(
+        'http://iffsma-2030.com/public/api/v1/sport_service/addComment');
     Map<String, dynamic> serviceModel = {
       'user_id': userID.toString(),
       'sport_service_id': serviceID.toString(),

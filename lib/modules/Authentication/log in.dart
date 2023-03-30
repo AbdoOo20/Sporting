@@ -1,13 +1,13 @@
-import 'package:carousel_slider/carousel_slider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:news/models/authenticate/login%20model.dart';
+import 'package:news/modules/Authentication/forget%20password.dart';
 import 'package:news/modules/Authentication/sign%20up.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/user provider.dart';
 import '../../shared/Components.dart';
 import '../../shared/Style.dart';
-import '../../shared/const.dart';
 import '../home/home.dart';
 
 class LogIn extends StatefulWidget {
@@ -31,32 +31,7 @@ class _LogInState extends State<LogIn> {
         iconTheme: IconThemeData(color: white),
         backgroundColor: primaryColor,
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'IFMIS',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: sizeFromWidth(context, 23),
-                color: white,
-              ),
-            ),
-            Container(
-              height: sizeFromHeight(context, 15, hasAppBar: true),
-              width: sizeFromWidth(context, 5),
-              decoration: const BoxDecoration(
-                color: Color(0xFFbdbdbd),
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage('assets/images/logo 2.jpeg'),
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: appBarWidget(context),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.home),
@@ -73,7 +48,30 @@ class _LogInState extends State<LogIn> {
               child: ListView(
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  SizedBox(height: sizeFromHeight(context, 5)),
+                  SizedBox(height: sizeFromHeight(context, 20)),
+                  Container(
+                    margin: const EdgeInsets.only(right: 20),
+                    child: Text(
+                      'مرحبا بعودتك',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline4!
+                          .copyWith(color: primaryColor),
+                      textDirection: TextDirection.rtl,
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(right: 20),
+                    child: Text(
+                      'قم بالتسجيل الان و تصفح التطبيق',
+                      style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                        color: darkGrey,
+                        height: 0.2,
+                      ),
+                      textDirection: TextDirection.rtl,
+                    ),
+                  ),
+                  SizedBox(height: sizeFromHeight(context, 50)),
                   textFormField(
                     controller: email,
                     type: TextInputType.text,
@@ -146,6 +144,28 @@ class _LogInState extends State<LogIn> {
                         ],
                       ),
                     ),
+                  if (!userProvider.isLoading)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 5),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: textButton(
+                              context,
+                              'هل نسيت كلمة السر ؟',
+                              primaryColor,
+                              white,
+                              sizeFromWidth(context, 20),
+                              FontWeight.bold,
+                                  () {
+                                navigateAndFinish(context, const ForgetPassword());
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (userProvider.isLoading)
                     Center(
                       child: circularProgressIndicator(lightGrey, primaryColor, context),
@@ -153,44 +173,7 @@ class _LogInState extends State<LogIn> {
                 ],
               ),
             ),
-            Container(
-              color: primaryColor,
-              height: sizeFromHeight(context, 10),
-              width: sizeFromWidth(context, 1),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: CarouselSlider(
-                  items: downBanners.map((e) {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: NetworkImage(e.image),
-                                fit: BoxFit.fitWidth,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                  options: CarouselOptions(
-                    height: 250,
-                    initialPage: 0,
-                    enableInfiniteScroll: true,
-                    reverse: false,
-                    autoPlay: true,
-                    viewportFraction: 1,
-                    autoPlayInterval: const Duration(seconds: 3),
-                    autoPlayAnimationDuration: const Duration(seconds: 1),
-                    autoPlayCurve: Curves.fastOutSlowIn,
-                    scrollDirection: Axis.horizontal,
-                  ),
-                ),
-              ),
-            ),
+            bottomScaffoldWidget(context),
           ],
         ),
       ),

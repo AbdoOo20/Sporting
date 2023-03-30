@@ -36,32 +36,7 @@ class _AddNewsSportState extends State<AddNewsSport> {
         iconTheme: IconThemeData(color: white),
         backgroundColor: primaryColor,
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'IFMIS',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: sizeFromWidth(context, 23),
-                color: white,
-              ),
-            ),
-            Container(
-              height: sizeFromHeight(context, 15, hasAppBar: true),
-              width: sizeFromWidth(context, 5),
-              decoration: const BoxDecoration(
-                color: Color(0xFFbdbdbd),
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage('assets/images/logo 2.jpeg'),
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: appBarWidget(context),
         centerTitle: true,
       ),
       body: SizedBox(
@@ -138,49 +113,49 @@ class _AddNewsSportState extends State<AddNewsSport> {
                       hint: 'أدخل دولة الناشر',
                     ),
                     if (!sportServicesProvider.isLoading)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 2),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: textButton(
-                              context,
-                              'اختر صورة دولة الناشر',
-                              primaryColor,
-                              white,
-                              sizeFromWidth(context, 20),
-                              FontWeight.bold,
-                              () {
-                                sportServicesProvider.pickImagePublisher();
-                              },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 2),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: textButton(
+                                context,
+                                'اختر صورة دولة الناشر',
+                                primaryColor,
+                                white,
+                                sizeFromWidth(context, 20),
+                                FontWeight.bold,
+                                () {
+                                  sportServicesProvider.pickImagePublisher();
+                                },
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                     if (!sportServicesProvider.isLoading)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 2),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: textButton(
-                              context,
-                              'اختر صور الخبر',
-                              primaryColor,
-                              white,
-                              sizeFromWidth(context, 20),
-                              FontWeight.bold,
-                              () {
-                                sportServicesProvider.pickImagesNews();
-                              },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 2),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: textButton(
+                                context,
+                                'اختر صور الخبر',
+                                primaryColor,
+                                white,
+                                sizeFromWidth(context, 20),
+                                FontWeight.bold,
+                                () {
+                                  sportServicesProvider.pickImagesNews();
+                                },
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                     if (!sportServicesProvider.isLoading)
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -197,7 +172,8 @@ class _AddNewsSportState extends State<AddNewsSport> {
                                 FontWeight.bold,
                                 () async {
                                   if (formKey.currentState!.validate()) {
-                                    sportServicesProvider.addNews(
+                                    sportServicesProvider
+                                        .addNews(
                                       name.text.trim(),
                                       description.text.trim(),
                                       link.text.trim(),
@@ -205,7 +181,9 @@ class _AddNewsSportState extends State<AddNewsSport> {
                                       tellAboutYourSelf.text.trim(),
                                       publisherName.text.trim(),
                                       publisherCountry.text.trim(),
-                                    );
+                                    ).then((value) {
+                                      navigatePop(context);
+                                    });
                                   }
                                 },
                               ),
@@ -222,45 +200,7 @@ class _AddNewsSportState extends State<AddNewsSport> {
                   ],
                 ),
               ),
-              Container(
-                color: primaryColor,
-                height: sizeFromHeight(context, 10),
-                width: sizeFromWidth(context, 1),
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: CarouselSlider(
-                    items: downBanners.map((e) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: NetworkImage(e.image),
-                                  fit: BoxFit.fitWidth,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                    options: CarouselOptions(
-                      height: 250,
-                      initialPage: 0,
-                      enableInfiniteScroll: true,
-                      reverse: false,
-                      autoPlay: true,
-                      viewportFraction: 1,
-                      autoPlayInterval: const Duration(seconds: 3),
-                      autoPlayAnimationDuration:
-                      const Duration(seconds: 1),
-                      autoPlayCurve: Curves.fastOutSlowIn,
-                      scrollDirection: Axis.horizontal,
-                    ),
-                  ),
-                ),
-              ),
+              bottomScaffoldWidget(context),
             ],
           ),
         ),

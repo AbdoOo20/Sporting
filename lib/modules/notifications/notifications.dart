@@ -20,32 +20,7 @@ class _NotificationsState extends State<Notifications> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF7f0e14),
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'IFMIS',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: sizeFromWidth(context, 23),
-                color: white,
-              ),
-            ),
-            Container(
-              height: sizeFromHeight(context, 15, hasAppBar: true),
-              width: sizeFromWidth(context, 5),
-              decoration: const BoxDecoration(
-                color: Color(0xFFbdbdbd),
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage('assets/images/logo 2.jpeg'),
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: appBarWidget(context),
         centerTitle: true,
         leading: IconButton(
           onPressed: () {

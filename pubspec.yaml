@@ -65,6 +65,9 @@ dependencies:
   jiffy:
   wc_flutter_share:
   upgrader:
+  file_picker:
+  rating_bar:
+  marquee_widget:
 
 
   # The following adds the Cupertino Icons font to your application.

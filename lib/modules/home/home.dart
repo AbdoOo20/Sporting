@@ -1,3 +1,4 @@
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
@@ -18,6 +19,7 @@ import '../../providers/user provider.dart';
 import '../../shared/Style.dart';
 import '../../shared/const.dart';
 import '../competitions/Competitions.dart';
+import '../play_store/play store.dart';
 import 'drawer.dart';
 import 'dart:io';
 
@@ -233,8 +235,8 @@ class _HomeState extends State<Home> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(sizeFromWidth(context, 20)),
-                margin: const EdgeInsets.all(5),
+                height: sizeFromHeight(context, 15, hasAppBar: true),
+                width: sizeFromWidth(context, 6),
                 decoration: const BoxDecoration(
                   color: Color(0xFFbdbdbd),
                   shape: BoxShape.circle,
@@ -244,7 +246,7 @@ class _HomeState extends State<Home> {
                 ),
               ),
               Text(
-                'IFMIS ',
+                'IFMIS',
                 textAlign: TextAlign.end,
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
@@ -325,7 +327,7 @@ class _HomeState extends State<Home> {
                                     borderRadius: BorderRadius.circular(10),
                                     image: DecorationImage(
                                       image: NetworkImage(e.image),
-                                      fit: BoxFit.fitWidth,
+                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),
@@ -361,11 +363,11 @@ class _HomeState extends State<Home> {
                               sizeFromWidth(context, 2),
                               sizeFromWidth(context, 2.2),
                               10,
-                              const AssetImage('assets/images/2.png'),
+                              const AssetImage('assets/images/11.png'),
                               BoxFit.cover,
                               [
                                 textWidget(
-                                  'دردشة الجماهير الرياضية',
+                                  'المتاجر الرياضية',
                                   null,
                                   null,
                                   white,
@@ -377,14 +379,13 @@ class _HomeState extends State<Home> {
                               false,
                               10,
                               scaffoldColor,
-                              () {
+                                  () {
                                 String email =
                                     CacheHelper.getData(key: 'email') ?? '';
                                 if (email == '') {
                                   showAlertDialog(context);
                                 } else {
-                                  navigateAndFinish(
-                                      context, const CategoryChat());
+                                  navigateAndFinish(context, const PlayStore());
                                 }
                               },
                             ),
@@ -485,11 +486,11 @@ class _HomeState extends State<Home> {
                               sizeFromWidth(context, 2),
                               sizeFromWidth(context, 2.2),
                               10,
-                              const AssetImage('assets/images/11.png'),
+                              const AssetImage('assets/images/2.png'),
                               BoxFit.cover,
                               [
                                 textWidget(
-                                  'المتجر الرياضى',
+                                  'دردشة الجماهير الرياضية',
                                   null,
                                   null,
                                   white,
@@ -501,10 +502,15 @@ class _HomeState extends State<Home> {
                               false,
                               10,
                               scaffoldColor,
-                              () {
-                                showToast(
-                                    text: 'جاري العمل عليها',
-                                    state: ToastStates.SUCCESS);
+                                  () {
+                                String email =
+                                    CacheHelper.getData(key: 'email') ?? '';
+                                if (email == '') {
+                                  showAlertDialog(context);
+                                } else {
+                                  navigateAndFinish(
+                                      context, const CategoryChat());
+                                }
                               },
                             ),
                             materialWidget(
@@ -660,7 +666,7 @@ class _HomeState extends State<Home> {
                         ),
                         const SizedBox(height: 10),
                         textWidget(
-                          'عدد الزيارات: ${settingModel.userCount}',
+                          'عدد الزيارات: ${settingModel.visitors + 43509}',
                           null,
                           TextAlign.center,
                           black,
@@ -671,44 +677,7 @@ class _HomeState extends State<Home> {
                       ],
                     ),
                   ),
-                  Container(
-                    color: primaryColor,
-                    height: sizeFromHeight(context, 10),
-                    width: sizeFromWidth(context, 1),
-                    child: Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: CarouselSlider(
-                        items: downBanners.map((e) {
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: NetworkImage(e.image),
-                                      fit: BoxFit.fitWidth,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                        options: CarouselOptions(
-                          height: 250,
-                          initialPage: 0,
-                          enableInfiniteScroll: true,
-                          reverse: false,
-                          autoPlay: true,
-                          viewportFraction: 1,
-                          autoPlayInterval: const Duration(seconds: 3),
-                          autoPlayAnimationDuration: const Duration(seconds: 1),
-                          autoPlayCurve: Curves.fastOutSlowIn,
-                          scrollDirection: Axis.horizontal,
-                        ),
-                      ),
-                    ),
-                  ),
+                  bottomScaffoldWidget(context),
                 ],
               ),
               if (showPolicies == false) showAcceptPolicies(context),
